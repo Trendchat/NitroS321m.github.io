@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>العاب عزيز AzizGames-NitroStrom</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"
+          integrity="sha512-ds/AB4h27GGrkJwUzExlFl+GjQ9qiJlU7n+WspnZFxZj55qz0pvRBoBZY+1x2ea9aM21SdjW49QwscUbf2pL0w=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    /* إعدادات عامة */
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(45deg, #000 25%, #0d0d0d 50%, #000 75%);
+      background-size: 400% 400%;
+      animation: gradientAnimation 15s ease infinite;
+      direction: rtl;
+      font-family: 'Orbitron', Arial, sans-serif;
+      color: #0ff;
+    }
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    canvas { display: block; margin: 0 auto; }
+    #gameCanvas { background: radial-gradient(ellipse at center, #001 0%, #000 100%); }
+    /* العدادات */
+    #speedometer, #scoreBoard, #distanceBoard, #coinCounter {
+      position: absolute;
+      font-size: 10px;
+      color: #ff69b4;
+      background: rgba(0,0,0,0.7);
+      padding: 3px 6px;
+      border: 2px solid #ff69b4;
+      border-radius: 8px;
+      z-index: 6;
+      text-shadow: 0 0 10px #ff69b4;
+    }
+    #speedometer { top: 15px; left: 15px; }
+    #scoreBoard { top: 40px; left: 15px; }
+    #distanceBoard { top: 15px; right: 15px; }
+    #coinCounter { top: 40px; right: 15px; }
+    /* أزرار اللعب */
+    #shieldBtn {
+      position: absolute;
+      bottom: 250px;
+      right: 20px;
+      z-index: 6;
+      font-size: 24px;
+      background: linear-gradient(145deg, #00ffff, #004d4d);
+      border: 2px solid #0ff;
+      border-radius: 6px;
+      padding: 6px;
+      cursor: pointer;
+      transition: opacity 0.3s, transform 0.2s;
+      box-shadow: 0 0 15px #0ff;
+    }
+    #shieldBtn:active { transform: scale(1.1); }
+    /* زر التسريع الفائق */
+    #superSpeedBtn {
+      position: absolute;
+      bottom: 250px;
+      left: 20px; /* Placed on the opposite side */
+      z-index: 6;
+      font-size: 24px;
+      background: linear-gradient(145deg, #ff00ff, #990099); /* Example color */
+      border: 2px solid #ff00ff; /* Example color */
+      border-radius: 6px;
+      padding: 6px;
+      cursor: pointer;
+      transition: opacity 0.3s, transform 0.2s;
+      box-shadow: 0 0 15px #ff00ff; /* Example color */
+    }
+     #superSpeedBtn:active { transform: scale(1.1); }
+
+    /* شريط الدرع (المغناطيس) */
+    #shieldMeter {
+      position: absolute;
+      bottom: 220px;
+      right: 20px;
+      width: 70px;
+      height: 4px;
+      border: 1px solid #ff69b4;
+      border-radius: 4px;
+      z-index: 6;
+      background: rgba(0,255,255,0.1);
+    }
+    #shieldMeter div { height: 100%; background: #ff69b4; width: 0%; }
+    /* شريط المغناطيس */
+    #magnetMeter {
+      position: absolute;
+      bottom: 210px;
+      right: 20px;
+      width: 70px;
+      height: 4px;
+      border: 1px solid red;
+      border-radius: 4px;
+      z-index: 6;
+      background: rgba(255,0,0,0.1);
+    }
+    #magnetMeter div { height: 100%; background: red; width: 0%; transform-origin: right center; }
+    /* شريط الحماية */
+    #protectionMeter {
+      position: absolute;
+      bottom: 200px;
+      right: 20px;
+      width: 70px;
+      height: 4px;
+      border: 1px solid orange;
+      border-radius: 4px;
+      z-index: 6;
+      background: rgba(255,165,0,0.1);
+    }
+    #protectionMeter div { height: 100%; background: orange; width: 0%; transform-origin: right center; }
+    /* لا يوجد شريط تقدم لقطعة تعزيز النقاط */
+    /* أزرار التحكم */
+    .control-btn {
+      position: absolute;
+      bottom: 60px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #00ffff, #004d4d);
+      border: 2px solid #0ff;
+      font-size: 40px;
+      color: #0ff;
+      text-shadow: 0 0 8px #0ff;
+      outline: none;
+      user-select: none;
+      transition: transform 0.1s ease, background 0.2s ease;
+      z-index: 5;
+      box-shadow: 0 0 20px #0ff;
+    }
+    .control-btn:active {
+      transform: scale(0.9);
+      background: radial-gradient(circle, #00ffff, #003333);
+    }
+    #leftBtn { left: 20px; }
+    #rightBtn { right: 20px; }
+    /* شاشة البداية */
+    #startOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #6a0dad, #8a2be2, #da70d6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      color: #0ff;
+      font-size: 32px;
+      z-index: 10;
+    }
+    #startEffectsCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
+    /* شعار البداية */
+    #gameLogo {
+      position: absolute;
+      top: 20px;
+      font-size: 34px;
+      font-weight: bold;
+      color: #0ff;
+      text-shadow: 2px 2px 8px #000, 0 0 10px #0ff;
+      animation: glitch 2s infinite;
+      letter-spacing: 2px;
+      user-select: none;
+    }
+    @keyframes glitch {
+      0% { transform: translate(0); opacity: 1; filter: hue-rotate(0deg); }
+      20% { transform: translate(-3px, 3px); opacity: 0.8; filter: hue-rotate(20deg); }
+      40% { transform: translate(-3px, -3px); opacity: 1; filter: hue-rotate(40deg); }
+      60% { transform: translate(3px, 3px); opacity: 0.8; filter: hue-rotate(60deg); }
+      80% { transform: translate(3px, -3px); opacity: 1; filter: hue-rotate(80deg); }
+      100% { transform: translate(0); opacity: 1; filter: hue-rotate(0deg); }
+    }
+    /* أزرار شاشة البداية مع أيقونات مدمجة */
+    #startOverlay button {
+      padding: 12px 20px; /* Adjusted padding for icon */
+      font-size: 20px; /* Adjusted font size */
+      border: 2px solid #ff69b4;
+      background: linear-gradient(145deg, #ff69b4, #ff1493);
+      color: #fff;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+      margin-bottom: 10px;
+      z-index: 1;
+      box-shadow: 0 0 10px #ff69b4;
+      display: flex; /* For aligning icon and text */
+      align-items: center; /* For aligning icon and text */
+      justify-content: center; /* For aligning icon and text */
+    }
+    #startOverlay button img { /* Style for icons in start buttons */
+        margin-right: 8px; /* Space between icon and text */
+        width: 24px; /* Icon size */
+        height: 24px; /* Icon size */
+    }
+
+    #startOverlay button:hover {
+      background: rgba(255,105,180,0.8);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #ff69b4;
+    }
+    /* شاشة الإعدادات */
+    #settingsOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      color: #0ff;
+      font-size: 32px;
+      z-index: 11;
+    }
+    #settingsOverlay button {
+      padding: 8px 18px;
+      font-size: 18px;
+    }
+    /* شاشة الإنجازات */
+    #achievementsOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 60px;
+      gap: 15px;
+      color: #0ff;
+      font-size: 28px;
+      z-index: 11;
+    }
+    /* خانة أعلى رتبة */
+    #highestRankDisplay {
+      width: 80%;
+      background: rgba(0,255,255,0.1);
+      border: 2px solid #0ff;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 24px;
+      color: #0ff;
+      text-align: center;
+    }
+    /* شاشة المتجر */
+    #storeOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      gap: 15px;
+      color: #0ff;
+      font-size: 28px;
+      z-index: 11;
+      overflow-y: auto;
+    }
+    #storeHeader {
+      width: 90%;
+      text-align: center;
+    }
+    #storeHeader h2 { margin: 0; }
+    #storeCoinCounter {
+      font-size: 20px;
+      margin-top: 5px;
+      color: #ff69b4;
+    }
+    /* بطاقات المنتجات */
+    .productCard {
+      width: 90%;
+      background: rgba(0,255,255,0.1);
+      border: 2px solid #0ff;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 5px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .productImage {
+      width: 50px;
+      height: 50px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+    .productInfo { flex: 1; }
+    .productInfo h3 {
+      margin: 0 0 5px 0;
+      font-size: 24px;
+    }
+    .buyBtn, .buyProtectionBtn, .buyPointsBoostBtn, .buyAntibioticBtn, .buySuperSpeedBtn {
+      padding: 8px 16px;
+      background: linear-gradient(145deg, #00cc00, #009900);
+      border: 2px solid #00cc00;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .buyBtn:active, .buyProtectionBtn:active, .buyPointsBoostBtn:active, .buyAntibioticBtn:active, .buySuperSpeedBtn:active { transform: scale(1.05); }
+    /* زر الرجوع */
+    .backBtn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      padding: 8px 16px;
+      font-size: 20px;
+      border: 2px solid #ff69b4;
+      background: linear-gradient(145deg, #ff69b4, #ff1493);
+      color: #fff;
+      cursor: pointer;
+      border-radius: 10px;
+      z-index: 12;
+      box-shadow: 0 0 10px #ff69b4;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .backBtn:hover {
+      background: rgba(255,105,180,0.8);
+      transform: scale(1.05);
+    }
+    /* إزالة زر الرجوع في شاشة الخسارة */
+    #gameOverOverlay .backBtn { display: none; }
+    /* شاشة الانتظار */
+    #waitingOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 12;
+      color: #0ff;
+      font-size: 14px;
+    }
+    .progress-container {
+      position: absolute;
+      bottom: 30px;
+      width: 60%;
+      height: 12px;
+      border: 2px solid #0ff;
+      border-radius: 5px;
+      overflow: hidden;
+      background: rgba(0,255,255,0.1);
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #0ff;
+      animation: progressFill 5s linear forwards;
+    }
+    @keyframes progressFill {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+    /* شاشة الخسارة */
+    #gameOverOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #000, #222);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #0ff;
+      font-size: 32px;
+      z-index: 10;
+    }
+    #gameOverOverlay .achievements {
+      margin-top: 20px;
+      font-size: 24px;
+      text-align: center;
+    }
+    #playerRank, #featuredScore {
+      margin-top: 10px;
+      font-size: 28px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border: 2px solid #0ff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0ff;
+    }
+    /* زر إعادة اللعب */
+    #restartBtn {
+      padding: 12px 30px;
+      font-size: 24px;
+      border: 2px solid #ff69b4;
+      background: linear-gradient(145deg, #ff69b4, #ff1493);
+      color: #fff;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+      margin-top: 20px;
+      box-shadow: 0 0 10px #ff69b4;
+    }
+    #restartBtn:hover {
+      background: rgba(255,105,180,0.8);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #ff69b4;
+    }
+    /* رسالة للأجهزة غير المدعومة */
+    #unsupportedOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      color: #fff;
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      font-size: 18px;
+      flex-direction: column;
+    }
+    /* نافذة استئناف اللعب */
+    #resumeOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #0ff;
+      font-size: 28px;
+      z-index: 13;
+    }
+    #resumeOverlay .resume-message {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    #resumeOverlay button {
+        padding: 12px 30px;
+        font-size: 24px;
+        border: 2px solid #00ff00;
+        background: linear-gradient(145deg, #00cc00, #009900);
+        color: #fff;
+        cursor: pointer;
+        border-radius: 10px;
+        transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 0 10px #00ff00;
+    }
+     #resumeOverlay button:hover {
+      background: rgba(0,204,0,0.8);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ff00;
+    }
+
+  </style>
+  </head>
+<body>
+  <div id="unsupportedOverlay">
+    <p>هذه اللعبة مدعومة فقط على الأجهزة المحمولة وبالوضع العمودي.<br>يرجى استخدام هاتفك أو تحويل الشاشة إلى الوضع العمودي.</p>
+  </div>
+  <div id="speedometer">السرعة: 8 م/ث</div>
+  <div id="scoreBoard">النقاط: 0</div>
+  <div id="distanceBoard">المسافة: 0</div>
+  <div id="coinCounter">العملات: 0</div>
+  <button id="shieldBtn">🛡️</button>
+  <button id="superSpeedBtn">🚀</button> <div id="shieldMeter"><div></div></div>
+  <div id="magnetMeter"><div></div></div>
+  <div id="protectionMeter"><div></div></div>
+  <canvas id="gameCanvas"></canvas>
+  <button id="leftBtn" class="control-btn">←</button>
+  <button id="rightBtn" class="control-btn">→</button>
+  <div id="startOverlay">
+    <canvas id="startEffectsCanvas"></canvas>
+    <div id="gameLogo">NITRO STROM</div>
+    <div id="startMessage">اضغط "ابدأ اللعب" للانطلاق</div>
+    <button id="startBtn">ابدأ اللعب</button>
+    <button id="settingsBtn"><img id="settingsBtnIcon" src="" alt="Settings Icon"> <span id="settingsBtnText"></span></button>
+    <button id="achievementsBtn"><img id="achievementsBtnIcon" src="" alt="Achievements Icon"> <span id="achievementsBtnText"></span></button>
+    <button id="storeBtn"><img id="storeBtnIcon" src="" alt="Store Icon"> <span id="storeBtnText"></span></button>
+  </div>
+  <div id="settingsOverlay">
+    <button class="backBtn" id="backSettingsBtn"></button>
+    <h2 id="settingsTitle">الإعدادات</h2>
+    <button id="soundToggleBtn">الصوت: مفعل</button>
+    <button id="controlMethodBtn">التحكم بالأزرار</button>
+    <button id="langToggleBtn">English</button>
+  </div>
+  <div id="achievementsOverlay">
+    <button class="backBtn" id="backAchievementsBtn"></button>
+    <h2 id="achievementsTitle">الإنجازات</h2>
+    <div id="highestRankDisplay"></div>
+    <ul id="achievementsList" style="list-style: none; padding: 0; margin: 0; width: 80%;"></ul>
+  </div>
+  <div id="storeOverlay">
+    <button class="backBtn" id="backStoreBtn"></button>
+    <div id="storeHeader">
+      <h2 id="storeTitle">المتجر</h2>
+      <div id="storeCoinCounter">رصيد العملات: 0</div>
+    </div>
+    <div id="storeProducts">
+      <div class="productCard">
+        <img src="https://via.placeholder.com/50" alt="Magnet" class="productImage">
+        <div class="productInfo">
+          <h3 class="productName"></h3>
+          <p class="productDesc"></p>
+          <p class="productPrice"></p>
+          <p class="productQuantity"></p>
+          <button class="buyBtn" id="buyMagnetBtn"></button>
+        </div>
+      </div>
+      <div class="productCard">
+        <img src="https://via.placeholder.com/50" alt="Protection" class="productImage">
+        <div class="productInfo">
+          <h3 class="protectionProductName"></h3>
+          <p class="protectionProductDesc"></p>
+          <p class="protectionProductPrice"></p>
+          <p class="protectionProductQuantity"></p>
+          <button class="buyProtectionBtn" id="buyProtectionBtn"></button>
+        </div>
+      </div>
+      <div class="productCard">
+        <img src="https://via.placeholder.com/50" alt="Points Boost" class="productImage">
+        <div class="productInfo">
+          <h3 class="pointsBoostProductName"></h3>
+          <p class="pointsBoostProductDesc"></p>
+          <p class="pointsBoostProductPrice"></p>
+          <p class="pointsBoostProductQuantity"></p>
+          <button class="buyPointsBoostBtn" id="buyPointsBoostBtn"></button>
+        </div>
+      </div>
+       <div class="productCard">
+         <img src="https://via.placeholder.com/50" alt="Antibiotic" class="productImage">
+         <div class="productInfo">
+           <h3 class="antibioticProductName"></h3>
+           <p class="antibioticProductDesc"></p>
+           <p class="antibioticProductPrice"></p>
+           <p class="antibioticProductQuantity"></p>
+           <button class="buyAntibioticBtn" id="buyAntibioticBtn"></button>
+         </div>
+       </div>
+        <div class="productCard">
+         <img src="https://via.placeholder.com/50" alt="Super Speed" class="productImage">
+         <div class="productInfo">
+           <h3 class="superSpeedProductName"></h3>
+           <p class="superSpeedProductDesc"></p>
+           <p class="superSpeedProductPrice"></p>
+           <p class="superSpeedProductQuantity"></p>
+           <button class="buySuperSpeedBtn" id="buySuperSpeedBtn"></button>
+         </div>
+       </div>
+    </div>
+  </div>
+  <div id="waitingOverlay">
+    <div class="progress-container">
+      <div class="progress-bar"></div>
+    </div>
+    <div id="developerInfo">
+      <div id="developerTitle">تعرف على المطور</div>
+      <button id="devFB">فيسبوك</button>
+      <button id="devIG">إنستقرام</button>
+      <button id="devYT">يوتيوب</button>
+    </div>
+  </div>
+  <div id="gameOverOverlay">
+    <div id="gameOverMessage">انتهت اللعبة!</div>
+    <div id="featuredScore"></div>
+    <div class="achievements" id="achievementsText"></div>
+    <div id="playerRank"></div>
+    <button id="restartBtn">إعادة اللعب</button>
+  </div>
+  <div id="resumeOverlay">
+      <div class="resume-message">هل تريد استئناف اللعب باستخدام مضاد حيوي؟</div>
+      <button id="resumeGameBtn">استئناف اللعب</button>
+  </div>
+  <script>
+    /* ===================== دوال توليد الأيقونات برمجياً ===================== */
+    // توليد أيقونة للإعدادات (رمز التروس)
+    function generateSettingsIcon() {
+      const cvs = document.createElement("canvas");
+      cvs.width = cvs.height = 24; // Adjusted for button icon size
+      const ctxIcon = cvs.getContext("2d");
+      ctxIcon.clearRect(0,0,24,24);
+      ctxIcon.strokeStyle = "#fff";
+      ctxIcon.lineWidth = 1.5; // Adjusted for smaller icon
+      ctxIcon.beginPath();
+      ctxIcon.arc(12,12,4,0,Math.PI*2); // Adjusted for smaller icon
+      ctxIcon.stroke();
+      for(let i=0;i<8;i++){
+        const angle = i*(Math.PI/4);
+        const x1 = 12 + Math.cos(angle)*6; // Adjusted for smaller icon
+        const y1 = 12 + Math.sin(angle)*6; // Adjusted for smaller icon
+        const x2 = 12 + Math.cos(angle)*9; // Adjusted for smaller icon
+        const y2 = 12 + Math.sin(angle)*9; // Adjusted for smaller icon
+        ctxIcon.beginPath();
+        ctxIcon.moveTo(x1,y1);
+        ctxIcon.lineTo(x2,y2);
+        ctxIcon.stroke();
+      }
+      return cvs.toDataURL();
+    }
+
+    // توليد أيقونة الإنجازات (رمز الكأس)
+    function generateAchievementsIcon() {
+      const cvs = document.createElement("canvas");
+      cvs.width = cvs.height = 24; // Adjusted for button icon size
+      const ctxIcon = cvs.getContext("2d");
+      ctxIcon.clearRect(0,0,24,24);
+      ctxIcon.fillStyle = "#fff";
+      // Scaled down coordinates for a 24x24 canvas
+      ctxIcon.beginPath();
+      ctxIcon.moveTo(7,10); // Adjusted
+      ctxIcon.lineTo(17,10); // Adjusted
+      ctxIcon.quadraticCurveTo(18,10,18,11); // Adjusted
+      ctxIcon.lineTo(18,14); // Adjusted
+      ctxIcon.quadraticCurveTo(18,15,17,15); // Adjusted
+      ctxIcon.lineTo(7,15); // Adjusted
+      ctxIcon.quadraticCurveTo(6,15,6,14); // Adjusted
+      ctxIcon.lineTo(6,11); // Adjusted
+      ctxIcon.quadraticCurveTo(6,10,7,10); // Adjusted
+      ctxIcon.fill();
+      ctxIcon.beginPath();
+      ctxIcon.moveTo(12,15); // Adjusted
+      ctxIcon.lineTo(12,19); // Adjusted
+      ctxIcon.strokeStyle = "#fff";
+      ctxIcon.lineWidth = 1.5; // Adjusted
+      ctxIcon.stroke();
+      return cvs.toDataURL();
+    }
+
+    // توليد أيقونة المتجر (رمز حقيبة التسوق)
+    function generateStoreIcon() {
+      const cvs = document.createElement("canvas");
+      cvs.width = cvs.height = 24; // Adjusted for button icon size
+      const ctxIcon = cvs.getContext("2d");
+      ctxIcon.clearRect(0,0,24,24);
+      ctxIcon.strokeStyle = "#fff";
+      ctxIcon.lineWidth = 1.5; // Adjusted
+      // Scaled down coordinates for a 24x24 canvas
+      ctxIcon.beginPath();
+      ctxIcon.moveTo(7, 10); // Adjusted
+      ctxIcon.lineTo(17, 10); // Adjusted
+      ctxIcon.lineTo(17, 17); // Adjusted
+      ctxIcon.lineTo(7, 17);  // Adjusted
+      ctxIcon.closePath();
+      ctxIcon.stroke();
+      ctxIcon.beginPath();
+      ctxIcon.moveTo(9, 10); // Adjusted
+      ctxIcon.quadraticCurveTo(12, 6, 15, 10); // Adjusted
+      ctxIcon.stroke();
+      return cvs.toDataURL();
+    }
+    /* ===================== نهاية دوال توليد الأيقونات ===================== */
+
+    /* --------------------- المتغيرات الأساسية --------------------- */
+    const scaleFactor = 1.0;
+    const originalRoadWidth = 240;
+    const roadWidth = originalRoadWidth * scaleFactor;
+    let roadX = (window.innerWidth - roadWidth) / 2;
+    let lanes = [0, 0, 0];
+    function updateLanes() {
+      lanes[0] = roadX + roadWidth/6 - 20*scaleFactor;
+      lanes[1] = roadX + roadWidth/2 - 20*scaleFactor;
+      lanes[2] = roadX + (5*roadWidth)/6 - 20*scaleFactor;
+    }
+    /* ---------------- إعدادات اللغة والتخزين المحلي ---------------- */
+    let currentLanguage = "ar", soundsEnabled = true, controlMethod = "buttons";
+    const translations = {
+      ar: {
+        startMessage: ' ',
+        startBtn: 'ابدأ اللعب',
+        restartBtn: 'إعادة اللعب',
+        gameOverMessage: 'انتهت اللعبة!',
+        score: 'النقاط: ',
+        distance: 'المسافة: ',
+        langBtn: 'English',
+        soundOn: 'الصوت: مفعل',
+        soundOff: 'الصوت: معطل',
+        coins: 'العملات: ',
+        controlButtons: 'التحكم بالأزرار',
+        controlRotation: 'التحكم بالتدوير',
+        developerTitle: 'تعرف على المطور',
+        devFB: 'فيسبوك',
+        devIG: 'إنستقرام',
+        devYT: 'يوتيوب',
+        rankNames: ["مبتدئ","محترف","بطل","منتصر","فاتح","سيد","أمير","غازي","قاهر","قائد","حاكم","سلطان","إمبراطور","ملك"],
+        back: "رجوع",
+        settingsTitle: "الإعدادات", // Removed icon from here
+        achievementsTitle: "الإنجازات", // Removed icon from here
+        storeTitle: "المتجر", // Removed icon from here
+        storeCoinCounter: "رصيد العملات: ",
+        productMagnetName: "المغناطيس 🧲",
+        productMagnetDesc: "دفعة: 20 قطعة مغناطيس - السعر: 100 عملة", // Updated price
+        productPrice: "السعر: ",
+        productQuantity: "الكمية: ",
+        buyButtonText: "شراء", // New translation key for generic buy button
+        productProtectionName: "الحماية 🛡️",
+        productProtectionDesc: "دفعة: 10 قطع حماية - السعر: 50 عملة",
+        productProtectionPrice: "السعر: 50 عملة",
+        productProtectionQuantity: "الكمية: ",
+        productPointsBoostName: "تعزيز النقاط 🎯",
+        productPointsBoostDesc: "دفعة: 3 قطع تعزيز النقاط - السعر: 100 عملة",
+        productPointsBoostPrice: "السعر: 100 عملة",
+        productPointsBoostQuantity: "الكمية: ",
+        productAntibioticName: "مضاد حيوي 💉",
+        productAntibioticDesc: "دفعة: 3 قطع مضاد حيوي - السعر: 100 عملة",
+        productAntibioticPrice: "السعر: 100 عملة",
+        productAntibioticQuantity: "الكمية: ",
+        productSuperSpeedName: "تسريع فائق 🚀",
+        productSuperSpeedDesc: "دفعة: 5 قطع تسريع فائق - السعر: 100 عملة",
+        productSuperSpeedPrice: "السعر: 100 عملة",
+        productSuperSpeedQuantity: "الكمية: ",
+        startSettingsBtn: "الإعدادات",
+        startAchievementsBtn: "الإنجازات",
+        startStoreBtn: "المتجر",
+        highestRankLabel: "أعلى رتبة: ",
+        resumeMessage: "هل تريد استئناف اللعب باستخدام مضاد حيوي؟",
+        resumeGameBtn: "استئناف اللعب"
+
+      },
+      en: {
+        startMessage: '',
+        startBtn: 'Start Game',
+        restartBtn: 'Restart',
+        gameOverMessage: 'Game Over!',
+        score: 'Score: ',
+        distance: 'Distance: ',
+        langBtn: 'العربية',
+        soundOn: 'Sound: On',
+        soundOff: 'Sound: Off',
+        coins: ' Coins: ',
+        controlButtons: 'Control: Buttons',
+        controlRotation: 'Control: Rotation',
+        developerTitle: 'Meet the Developer',
+        devFB: 'Facebook',
+        devIG: 'Instagram',
+        devYT: 'YouTube',
+        rankNames: ["Beginner","Professional","Champion","Victor","Conqueror","Master","Prince","Invader","Vanquisher","Leader","Ruler","Sultan","Emperor","King"],
+        back: "Back",
+        settingsTitle: "Settings", // Removed icon from here
+        achievementsTitle: "Achievements", // Removed icon from here
+        storeTitle: "Store", // Removed icon from here
+        storeCoinCounter: "Coin Balance: ",
+        productMagnetName: "Magnet 🧲",
+        productMagnetDesc: "Batch: 20 magnet pieces - Price: 100 coins", // Updated price
+        productPrice: "Price: ",
+        productQuantity: "Quantity: ",
+        buyButtonText: "Buy", // New translation key for generic buy button
+        productProtectionName: "Protection 🛡️",
+        productProtectionDesc: "Batch: 10 protection pieces - Price: 50 coins",
+        productProtectionPrice: "Price: 50 coins",
+        productProtectionQuantity: "Quantity: ",
+        productPointsBoostName: "Points Boost 🎯",
+        productPointsBoostDesc: "Batch: 3 points boost pieces - Price: 100 coins",
+        productPointsBoostPrice: "Price: 100 coins",
+        productPointsBoostQuantity: "Quantity: ",
+        productAntibioticName: "Antibiotic 💉",
+        productAntibioticDesc: "Batch: 3 antibiotic pieces - Price: 100 coins",
+        productAntibioticPrice: "Price: 100 coins",
+        productAntibioticQuantity: "Quantity: ",
+        productSuperSpeedName: "Super Speed 🚀",
+        productSuperSpeedDesc: "Batch: 5 super speed pieces - Price: 100 coins",
+        productSuperSpeedPrice: "Price: 100 coins",
+        productSuperSpeedQuantity: "Quantity: ",
+        startSettingsBtn: "Settings",
+        startAchievementsBtn: "Achievements",
+        startStoreBtn: "Store",
+        highestRankLabel: "Highest Rank: ",
+        resumeMessage: "Do you want to resume the game using an antibiotic?",
+        resumeGameBtn: "Resume Game"
+      }
+    };
+    const rankIcons = ["⭐","🏅","🥇","🏆","🎖️","🏵️","👑","🚀","⚡","💼","🔱","👑","🏛️","👑"];
+    function saveSettings() {
+      const settings = { language: currentLanguage, soundsEnabled: soundsEnabled, controlMethod: controlMethod };
+      localStorage.setItem("gameSettings", JSON.stringify(settings));
+    }
+    function loadSettings() {
+      const savedSettings = JSON.parse(localStorage.getItem("gameSettings") || "{}");
+      if (savedSettings.language) currentLanguage = savedSettings.language;
+      if (typeof savedSettings.soundsEnabled !== "undefined") soundsEnabled = savedSettings.soundsEnabled;
+      if (savedSettings.controlMethod) controlMethod = savedSettings.controlMethod;
+      // Set icons for start screen buttons after loading settings (language might affect text)
+      document.getElementById("settingsBtnIcon").src = generateSettingsIcon();
+      document.getElementById("achievementsBtnIcon").src = generateAchievementsIcon();
+      document.getElementById("storeBtnIcon").src = generateStoreIcon();
+      updateLanguage();
+    }
+    window.addEventListener("load", loadSettings);
+    /* ---------------- حفظ رصيد العملات ---------------- */
+    let persistentCoins = parseInt(localStorage.getItem("coinBalance") || "0", 10);
+    let magnetBatch = parseInt(localStorage.getItem("magnetBatch") || "0", 10);
+    let protectionBatch = parseInt(localStorage.getItem("protectionBatch") || "0", 10);
+    let pointsBoostBatch = parseInt(localStorage.getItem("pointsBoostBatch") || "0", 10);
+    let antibioticBatch = parseInt(localStorage.getItem("antibioticBatch") || "0", 10);
+    let superSpeedBatch = parseInt(localStorage.getItem("superSpeedBatch") || "0", 10);
+    let highestRank = localStorage.getItem("highestRank") || (currentLanguage === "ar" ? "غير محددة" : "Not set");
+    /* --------------------- إعداد اللوحة --------------------- */
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      roadX = (window.innerWidth - roadWidth) / 2;
+      updateLanes();
+    }
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      resizeStartEffects();
+      checkDeviceAndOrientation();
+      initBuildings();
+    });
+    resizeCanvas();
+    /* ------------------- إعداد كانفاس تأثيرات البداية ------------------- */
+    const startEffectsCanvas = document.getElementById("startEffectsCanvas");
+    const startEffectsCtx = startEffectsCanvas.getContext("2d");
+    function resizeStartEffects() {
+      startEffectsCanvas.width = window.innerWidth;
+      startEffectsCanvas.height = window.innerHeight;
+    }
+    resizeStartEffects();
+    let particles = [];
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < 60; i++) {
+        particles.push({
+          x: Math.random() * startEffectsCanvas.width,
+          y: Math.random() * startEffectsCanvas.height,
+          radius: Math.random() * 3 + 2,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          alpha: Math.random()
+        });
+      }
+    }
+    function updateParticles() {
+      startEffectsCtx.clearRect(0, 0, startEffectsCanvas.width, startEffectsCanvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.005;
+        if (p.alpha <= 0) {
+          p.alpha = 1;
+          p.x = Math.random() * startEffectsCanvas.width;
+          p.y = Math.random() * startEffectsCanvas.height;
+        }
+        startEffectsCtx.beginPath(); // Changed from ctx to startEffectsCtx
+        startEffectsCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        startEffectsCtx.fillStyle = "rgba(0,255,255," + p.alpha + ")"; // Changed from ctx to startEffectsCtx
+        startEffectsCtx.fill(); // Changed from ctx to startEffectsCtx
+      });
+      requestAnimationFrame(updateParticles);
+    }
+    initParticles();
+    updateParticles();
+    /* ------------------ تأثيرات المطر والضباب ------------------ */
+    let rainDrops = [];
+    const numRainDrops = 100;
+    function initRain() {
+      rainDrops = [];
+      for (let i = 5; i < numRainDrops; i++) {
+        rainDrops.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          length: Math.random() * 20 + 10,
+          speed: Math.random() * 5 + 2,
+          color: "hsla(" + Math.floor(Math.random()*360) + ",70%,60%,0.7)"
+        });
+      }
+    }
+    function updateRain(dt) {
+      const speedFactor = globalCurrentSpeed / initialSpeed;
+      rainDrops.forEach(drop => {
+        drop.y += drop.speed * 0.9 * speedFactor;
+        if (drop.y > window.innerHeight) {
+          drop.y = -drop.length;
+          drop.x = Math.random() * window.innerWidth;
+          drop.color = "hsla(" + Math.floor(Math.random()*360) + ",70%,60%,0.7)";
+        }
+      });
+    }
+    function drawRain() {
+      ctx.save();
+      ctx.lineWidth = 1;
+      rainDrops.forEach(drop => {
+        ctx.strokeStyle = drop.color;
+        ctx.beginPath();
+        ctx.moveTo(drop.x, drop.y);
+        ctx.lineTo(drop.x, drop.y + drop.length);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+    function drawFog() {
+      ctx.save();
+      let gradient = ctx.createLinearGradient(0,0,0,window.innerHeight);
+      gradient.addColorStop(0, "rgba(200,200,200,0.0)");
+      gradient.addColorStop(0.5, "rgba(200,200,200,0.2)");
+      gradient.addColorStop(1, "rgba(200,200,200,0.4)");
+      ctx.fillStyle = gradient;
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
+      ctx.restore();
+    }
+    initRain();
+    /* ------------------ نظام الصوت والموسيقى ------------------ */
+    let mainAudioCtx = null;
+    function playButtonSound() {
+      if(!mainAudioCtx)return;
+      const osc = mainAudioCtx.createOscillator();
+      const gain = mainAudioCtx.createGain();
+      osc.type="sine";
+      gain.gain.setValueAtTime(0.12, mainAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, mainAudioCtx.currentTime+0.1);
+      osc.connect(gain);
+      gain.connect(mainAudioCtx.destination);
+      osc.start();
+      osc.stop(mainAudioCtx.currentTime+0.1);
+    }
+    function vibrateFeedback(duration=50){ if(navigator.vibrate){navigator.vibrate(duration);} }
+    document.querySelectorAll("button").forEach(btn=>{ btn.addEventListener("click", ()=>{ playButtonSound(); vibrateFeedback(); }); });
+    const MusicManager = {
+      currentOscillators: [],
+      currentScreen: null,
+      playSequence(seq) {
+        if(!mainAudioCtx)return;
+        let now = mainAudioCtx.currentTime;
+        this.stopMusic();
+        seq.forEach(note=>{
+          const osc = mainAudioCtx.createOscillator();
+          const gain = mainAudioCtx.createGain();
+          osc.type = note.type || "sine";
+          osc.frequency.setValueAtTime(note.frequency, now);
+          let vol = note.volume;
+          if(this.currentScreen==="start") vol*=0.5;
+          else if(this.currentScreen==="gameover") vol*=0.2;
+          gain.gain.setValueAtTime(vol, now);
+          osc.connect(gain);
+          gain.connect(mainAudioCtx.destination);
+          osc.start(now);
+          osc.stop(now+note.duration);
+          this.currentOscillators.push(osc);
+          now+=note.duration;
+        });
+      },
+      stopMusic() {
+        this.currentOscillators.forEach(o=>{try{o.stop();}catch{}});
+        this.currentOscillators = [];
+      },
+      playStartMusic() {
+        this.currentScreen = "start";
+        this.playSequence([
+          { frequency: 440, duration: 0.5, type: "sine", volume: 0.2 },
+          { frequency: 494, duration: 0.5, type: "sine", volume: 0.2 },
+          { frequency: 523, duration: 0.5, type: "sine", volume: 0.2 },
+          { frequency: 587, duration: 0.5, type: "sine", volume: 0.2 }
+        ]);
+      },
+      playWaitingMusic() {
+        this.currentScreen = "waiting";
+        this.playSequence([
+          { frequency: 330, duration: 0.5, type: "square", volume: 0.05 },
+          { frequency: 349, duration: 0.5, type: "square", volume: 0.05 },
+          { frequency: 392, duration: 0.5, type: "square", volume: 0.05 },
+          { frequency: 440, duration: 0.5, type: "square", volume: 0.05 }
+        ]);
+      },
+      playGameOverMusic() {
+        this.currentScreen = "gameover";
+        this.playSequence([
+          { frequency: 220, duration: 0.7, type: "sawtooth", volume: 0.2 },
+          { frequency: 196, duration: 0.7, type: "sawtooth", volume: 0.2 },
+          { frequency: 174, duration: 1.0, type: "sawtooth", volume: 0.2 }
+        ]);
+      },
+      startLoop(screen) {
+        this.currentScreen = screen;
+        const loop = ()=>{
+          if(this.currentScreen!==screen)return;
+          if(screen==="start") this.playStartMusic();
+          else if(screen==="waiting") this.playWaitingMusic();
+          else if(screen==="gameover") this.playGameOverMusic();
+          setTimeout(loop, (screen==="gameover"?2.4:2.0)*1000);
+        };
+        loop();
+      },
+      stopLoop() {
+        this.currentScreen = null;
+        this.stopMusic();
+      }
+    };
+    const AudioManager = {
+      audioCtx: null,
+      masterGain: null,
+      engineOsc: null,
+      engineGain: null,
+      baseEngineGain: 0.1,
+      initialized: false,
+      init() {
+        if(this.initialized)return;
+        mainAudioCtx = mainAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        this.audioCtx=mainAudioCtx;
+        this.masterGain = this.audioCtx.createGain();
+        this.masterGain.gain.value = soundsEnabled?0.5:0;
+        this.engineGain = this.audioCtx.createGain();
+        this.engineGain.gain.value = this.baseEngineGain;
+        this.engineOsc = this.audioCtx.createOscillator();
+        this.engineOsc.type="sine";
+        this.engineOsc.frequency.value = 60;
+        this.engineOsc.connect(this.engineGain);
+        this.engineGain.connect(this.masterGain);
+        this.masterGain.connect(this.audioCtx.destination);
+        this.engineOsc.start();
+        this.initialized = true;
+      },
+      updateEngineSound(speed) {
+        let gear = speed<10?1: speed<12?2: speed<14?3:4;
+        let freq = 60*gear*(speed/initialSpeed)*(1+(Math.random()-0.5)*0.1);
+        this.engineOsc.frequency.setTargetAtTime(freq, this.audioCtx.currentTime, 0.1);
+        let gain = this.baseEngineGain*(1+(Math.random()-0.5)*0.1);
+        if(Math.random()<0.03) gain*=0.3;
+        this.engineGain.gain.setTargetAtTime(gain, this.audioCtx.currentTime, 0.1);
+      },
+      playCoinSound() {
+        let osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type="triangle";
+        gain.gain.setValueAtTime(0.25, this.audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(this.audioCtx.currentTime);
+        osc.stop(this.audioCtx.currentTime+0.3);
+      },
+      playCrash() {
+        const dur = 0.2;
+        const buf = this.audioCtx.createBuffer(1, this.audioCtx.sampleRate*dur, this.audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for(let i=0;i<data.length;i++){ data[i] = Math.random()*2 -1; }
+        const noise = this.audioCtx.createBufferSource();
+        const filter = this.audioCtx.createBiquadFilter();
+        const gain = this.audioCtx.createGain();
+        noise.buffer = buf;
+        filter.type="lowpass";
+        filter.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start();
+        noise.stop(this.audioCtx.currentTime+dur);
+      },
+      playBulletSound() {
+        let osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type="square";
+        osc.frequency.value=500;
+        gain.gain.setValueAtTime(0.15*0.8, this.audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(mainAudioCtx.currentTime+0.1);
+      },
+      playExplosionSound() {
+        let osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type="sawtooth";
+        osc.frequency.value=100;
+        gain.gain.setValueAtTime(0.25*0.8, this.audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(mainAudioCtx.currentTime+0.3);
+      },
+      stopAll() {
+        if(this.masterGain){
+          this.masterGain.gain.setTargetAtTime(0, this.audioCtx.currentTime, 0.1);
+        }
+      }
+    };
+    /* ----------------- أصوات التحكم ----------------- */
+    function playCarControlSound(){
+      if(!mainAudioCtx)return;
+      let osc = mainAudioCtx.createOscillator();
+      const gain = mainAudioCtx.createGain();
+      osc.type="sine";
+      osc.frequency.value = 550;
+      gain.gain.setValueAtTime(0.15*0.8, mainAudioCtx.currentTime);
+      osc.connect(gain);
+      gain.connect(mainAudioCtx.destination);
+      osc.start();
+      osc.stop(mainAudioCtx.currentTime+0.1);
+    }
+    document.querySelectorAll(".control-btn").forEach(btn=>{
+      btn.addEventListener("touchstart", e=>{
+        e.preventDefault();
+        btn.style.transform="scale(0.9)";
+        playCarControlSound();
+        vibrateFeedback();
+        if(btn.id==="leftBtn") moveLeft = true;
+        else if(btn.id==="rightBtn") moveRight = true;
+      });
+      btn.addEventListener("touchend", e=>{
+        e.preventDefault();
+        btn.style.transform="scale(1)";
+        if(btn.id==="leftBtn") moveLeft = false;
+        else if(btn.id==="rightBtn") moveRight = false;
+      });
+    });
+    /* -------------------- الترجمة وتحديثها -------------------- */
+    function updateLanguage(){
+      const d = translations[currentLanguage];
+      document.getElementById("startMessage").textContent = d.startMessage;
+      document.getElementById("startBtn").textContent = d.startBtn;
+      document.getElementById("restartBtn").textContent = d.restartBtn;
+      document.getElementById("gameOverMessage").textContent = d.gameOverMessage;
+      document.getElementById("langToggleBtn").textContent = d.langBtn;
+      document.getElementById("soundToggleBtn").textContent = soundsEnabled ? d.soundOn : d.soundOff;
+      document.getElementById("controlMethodBtn").textContent = controlMethod==="buttons" ? d.controlButtons : d.controlRotation;
+      document.getElementById("developerTitle").textContent = d.developerTitle;
+      document.getElementById("devFB").textContent = d.devFB;
+      document.getElementById("devIG").textContent = d.devIG;
+      document.getElementById("devYT").textContent = d.devYT;
+      document.getElementById("settingsTitle").textContent = d.settingsTitle;
+      document.getElementById("achievementsTitle").textContent = d.achievementsTitle;
+      document.getElementById("storeTitle").textContent = d.storeTitle;
+      document.getElementById("storeCoinCounter").textContent = d.storeCoinCounter + persistentCoins;
+
+      // Magnet Product
+      document.querySelector(".productName").textContent = d.productMagnetName;
+      document.querySelector(".productDesc").textContent = d.productMagnetDesc; // Updated to reflect new price
+      document.querySelector(".productPrice").textContent = d.productPrice + "100 " + (currentLanguage==="ar"?"عملة":"coins");
+      document.querySelector(".productQuantity").textContent = d.productQuantity + magnetBatch;
+      document.getElementById("buyMagnetBtn").textContent = d.buyButtonText;
+
+
+      // Protection Product
+      document.querySelector(".protectionProductName").textContent = d.productProtectionName;
+      document.querySelector(".protectionProductDesc").textContent = d.productProtectionDesc;
+      document.querySelector(".protectionProductPrice").textContent = d.productProtectionPrice;
+      document.querySelector(".protectionProductQuantity").textContent = d.productQuantity + protectionBatch;
+      document.getElementById("buyProtectionBtn").textContent = d.buyButtonText;
+
+
+      // Points Boost Product
+      document.querySelector(".pointsBoostProductName").textContent = d.productPointsBoostName;
+      document.querySelector(".pointsBoostProductDesc").textContent = d.productPointsBoostDesc;
+      document.querySelector(".pointsBoostProductPrice").textContent = d.productPointsBoostPrice;
+      document.querySelector(".pointsBoostProductQuantity").textContent = d.productQuantity + pointsBoostBatch;
+      document.getElementById("buyPointsBoostBtn").textContent = d.buyButtonText;
+
+      // Antibiotic Product
+      document.querySelector(".antibioticProductName").textContent = d.productAntibioticName;
+      document.querySelector(".antibioticProductDesc").textContent = d.productAntibioticDesc;
+      document.querySelector(".antibioticProductPrice").textContent = d.productAntibioticPrice;
+      document.querySelector(".antibioticProductQuantity").textContent = d.productQuantity + antibioticBatch;
+      document.getElementById("buyAntibioticBtn").textContent = d.buyButtonText;
+
+      // Super Speed Product
+      document.querySelector(".superSpeedProductName").textContent = d.productSuperSpeedName;
+      document.querySelector(".superSpeedProductDesc").textContent = d.productSuperSpeedDesc;
+      document.querySelector(".superSpeedProductPrice").textContent = d.productSuperSpeedPrice;
+      document.querySelector(".superSpeedProductQuantity").textContent = d.productQuantity + superSpeedBatch;
+      document.getElementById("buySuperSpeedBtn").textContent = d.buyButtonText;
+
+
+      document.getElementById("settingsBtnText").textContent = " " + d.startSettingsBtn;
+      document.getElementById("achievementsBtnText").textContent = " " + d.startAchievementsBtn;
+      document.getElementById("storeBtnText").textContent = " " + d.startStoreBtn;
+
+      document.querySelectorAll(".backBtn").forEach(btn=>{ btn.textContent = d.back; });
+      document.getElementById("highestRankDisplay").textContent = d.highestRankLabel + highestRank;
+
+      document.querySelector("#resumeOverlay .resume-message").textContent = d.resumeMessage;
+      document.getElementById("resumeGameBtn").textContent = d.resumeGameBtn;
+    }
+    function toggleLanguage(){
+      currentLanguage = currentLanguage==="ar"?"en":"ar";
+      updateLanguage();
+      updateDashboard();
+      saveSettings();
+    }
+    document.getElementById("langToggleBtn").addEventListener("click", toggleLanguage);
+    function toggleControlMethod(){
+      controlMethod = controlMethod==="buttons"?"rotation":"buttons";
+      if(controlMethod==="buttons"){ moveLeft = false; moveRight = false; }
+      updateLanguage();
+      saveSettings();
+    }
+    document.getElementById("controlMethodBtn").addEventListener("click", toggleControlMethod);
+    function toggleSound(){
+      soundsEnabled = !soundsEnabled;
+      if(AudioManager.masterGain) AudioManager.masterGain.gain.value = soundsEnabled?0.5:0;
+      document.getElementById("soundToggleBtn").textContent = soundsEnabled ? translations[currentLanguage].soundOn : translations[currentLanguage].soundOff;
+      saveSettings();
+    }
+    document.getElementById("soundToggleBtn").addEventListener("click", toggleSound);
+    document.addEventListener("visibilitychange", ()=>{
+      if(document.hidden){
+        AudioManager.stopAll();
+        MusicManager.stopLoop();
+      } else if(AudioManager.masterGain){
+        AudioManager.masterGain.gain.value = soundsEnabled?0.5:0;
+      }
+    });
+    /* -------------------- فيزياء اللعبة -------------------- */
+    let tilt=0, calibratedTilt=0;
+    window.addEventListener("deviceorientation", function(e){
+      if(controlMethod==="rotation") tilt = e.gamma || 0;
+    });
+    let gameOver = false, distance = 0, score = 0;
+    const initialSpeed = 8;
+    let totalTime = 0;
+    const T1 = 11, T2 = 30;
+    function getCurrentSpeed(t){
+      let base;
+      if(t<=T1) base = initialSpeed + t*((13-initialSpeed)/T1);
+      else{
+        let d = Math.min(t-T1, T2-T1);
+        base = 13 + (d/(T2-T1))*(35-13);
+      }
+      return shieldActive ? Math.min(base, 28) : base;
+    }
+    /* ------------------ متغيرات التحكم ------------------ */
+    const laneMarkerHeight = 20*scaleFactor, laneMarkerWidth = 6*scaleFactor, laneMarkerGap = 30;
+    let laneMarkerY = 0;
+    let moveLeft=false, moveRight=false;
+    const leftBtn = document.getElementById("leftBtn"), rightBtn = document.getElementById("rightBtn");
+    document.addEventListener("keydown", e=>{
+      if(controlMethod==="buttons"){
+        if(e.key==="ArrowLeft"){ moveLeft=true; vibrateFeedback(20); }
+        else if(e.key==="ArrowRight"){ moveRight=true; vibrateFeedback(20); }
+      }
+    });
+    document.addEventListener("keyup", e=>{
+      if(controlMethod==="buttons"){
+        if(e.key==="ArrowLeft") moveLeft=false;
+        else if(e.key==="ArrowRight") moveRight=false;
+      }
+    });
+    let globalCurrentSpeed = initialSpeed;
+    let originalCurrentSpeed = initialSpeed;
+    let superSpeedActive = false;
+    let superSpeedTimeLeft = 0; // Duration for super speed
+
+    /* ------------------------- فئة السيارة ------------------------- */
+    class Car {
+      constructor(x, y, w, h, color, isPlayer=false){
+        this.x = x;
+        this.y = y;
+        this.width = w*scaleFactor;
+        this.height = h*scaleFactor;
+        this.baseColor = color;
+        this.color = color;
+        this.wheelAngle = 0;
+        this.isPlayer = isPlayer;
+        this.vx=0;
+      }
+      updatePhysics(){
+        if(!this.isPlayer)return;
+        const baseLat = 6, addLat = (globalCurrentSpeed-initialSpeed)*0.5;
+        const maxLat = baseLat+addLat;
+        let target = 0;
+        if(controlMethod==="rotation"){
+          const thr =5;
+          const eff = tilt-calibratedTilt;
+          if(eff>thr) target = maxLat*0.8*Math.atan((eff-thr)/15);
+          else if(eff< -thr) target = maxLat*0.8*Math.atan((eff+thr)/15);
+        } else {
+          if(moveLeft) target = -maxLat*1.5;
+          else if(moveRight) target = maxLat*1.5;
+        }
+        const sf = controlMethod==="rotation" ? 0.3 : 0.5;
+        this.vx += (target-this.vx)*sf;
+        this.vx *=0.98;
+        this.x += this.vx;
+      }
+      updateWheels(){ this.wheelAngle +=0.5; }
+      draw(){
+        ctx.save();
+        const bodyX = this.x, bodyY = this.y;
+        const bodyW = this.width, bodyH = this.height;
+        ctx.fillStyle = this.baseColor;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "#0ff";
+        ctx.beginPath();
+        ctx.moveTo(bodyX+bodyW*0.1, bodyY+bodyH*0.4);
+        ctx.lineTo(bodyX+bodyW*0.3, bodyY+bodyH*0.3);
+        ctx.quadraticCurveTo(bodyX+bodyW*0.5, bodyY+bodyH*0.2, bodyX+bodyW*0.7, bodyY+bodyH*0.3);
+        ctx.lineTo(bodyX+bodyW*0.9, bodyY+bodyH*0.4);
+        ctx.quadraticCurveTo(bodyX+bodyW, bodyY+bodyH*0.45, bodyX+bodyW*0.9, bodyY+bodyH*0.55);
+        ctx.lineTo(bodyX+bodyW*0.9, bodyY+bodyH*0.7);
+        ctx.quadraticCurveTo(bodyX+bodyW*0.8, bodyY+bodyH*0.85, bodyX+bodyW*0.5, bodyY+bodyH*0.85);
+        ctx.quadraticCurveTo(bodyX+bodyW*0.2, bodyY+bodyH*0.85, bodyX+bodyW*0.1, bodyY+bodyH*0.7);
+        ctx.lineTo(bodyX+bodyW*0.1, bodyY+bodyH*0.55);
+        ctx.quadraticCurveTo(bodyX, bodyY+bodyH*0.45, bodyX+bodyW*0.1, bodyY+bodyH*0.4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(bodyX+bodyW*0.35, bodyY+bodyH*0.4);
+        ctx.lineTo(bodyX+bodyW*0.65, bodyY+bodyH*0.4);
+        ctx.lineTo(bodyX+bodyW*0.6, bodyY+bodyH*0.55);
+        ctx.lineTo(bodyX+bodyW*0.4, bodyY+bodyH*0.55);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        drawWheel(this.x+12*scaleFactor, this.y+this.height-10*scaleFactor, 8*scaleFactor, this.wheelAngle);
+        drawWheel(this.x+this.width-12*scaleFactor, this.y+this.height-10*scaleFactor, 8*scaleFactor, this.wheelAngle);
+        drawHeadlights(this);
+        if(!this.isPlayer) drawEnemyTurbineFlame(this);
+      }
+    }
+    /* --------------------- دوال الرسم المساعدة --------------------- */
+    function drawHeadlights(car){
+      const y = car.y+car.height*0.45;
+      [car.x+car.width*0.15, car.x+car.width*0.85].forEach(x=>{
+        ctx.save();
+        const grad = ctx.createRadialGradient(x, y, 2, x, y, 12*scaleFactor);
+        grad.addColorStop(0,"rgba(255,255,224,1)");
+        grad.addColorStop(1,"rgba(255,255,224,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(x, y, 12*scaleFactor,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+    function drawWheel(x, y, r, angle){
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.fillStyle = "#444";
+      ctx.fill();
+      ctx.strokeStyle = "#0ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-r,0);
+      ctx.lineTo(r,0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,-r);
+      ctx.lineTo(0,r);
+      ctx.stroke();
+      ctx.restore();
+    }
+    function drawEnemyTurbineFlame(car){
+      const len = 15+Math.random()*5, w = 10*scaleFactor;
+      const grad = ctx.createLinearGradient(car.x+car.width/2, car.y+car.height, car.x+car.width/2, car.y+car.height+len);
+      grad.addColorStop(0, "rgba(255,150,0,0.8)");
+      grad.addColorStop(1, "rgba(255,0,0,0)");
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(car.x+car.width/2 - w/2, car.y+car.height);
+      ctx.lineTo(car.x+car.width/2, car.y+car.height+len);
+      ctx.lineTo(car.x+car.width/2 + w/2, car.y+car.height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    let flameTimer = 0;
+    function drawFlame(car){
+      if(!car.isPlayer)return;
+      const base = 40*scaleFactor, extra = (moveLeft||moveRight)?20*scaleFactor:0;
+      const dyn = 0.5+0.5*Math.sin(flameTimer*0.15);
+      const len = base+extra+30*dyn;
+      const hue = 280;
+      const col = `hsl(${hue},100%,${50+10*dyn}%)`;
+      const g1 = ctx.createLinearGradient(car.x+car.width/2, car.y+car.height, car.x+car.width/2, car.y+car.height+len);
+      g1.addColorStop(0, col);
+      g1.addColorStop(0.5, "rgba(200,0,255,0.7)");
+      g1.addColorStop(1, "rgba(0,0,0,0)");
+      const g2 = ctx.createLinearGradient(car.x+car.width/2, car.y+car.height, car.x+car.width/2, car.y+car.height+len+20);
+      g2.addColorStop(0, "rgba(255,255,255,0.5)");
+      g2.addColorStop(0.7, "rgba(200,0,255,0.3)");
+      g2.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.save();
+      ctx.fillStyle = g1;
+      ctx.beginPath();
+      ctx.moveTo(car.x+car.width/2, car.y+car.height);
+      ctx.lineTo(car.x+car.width/2-20*scaleFactor, car.y+car.height+len);
+      ctx.lineTo(car.x+car.width/2+20*scaleFactor, car.y+car.height+len);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.moveTo(car.x+car.width/2, car.y+car.height);
+      ctx.lineTo(car.x+car.width/2-25*scaleFactor, car.y+car.height+len+10);
+      ctx.lineTo(car.x+car.width/2+25*scaleFactor, car.y+car.height+len+10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      for(let i=0;i<5;i++){
+        ctx.save();
+        ctx.fillStyle = `rgba(255,255,255,${0.5+Math.random()*0.5})`;
+        ctx.beginPath();
+        ctx.arc(car.x+car.width/2+(Math.random()-0.5)*40*scaleFactor, car.y+car.height+len+Math.random()*20, Math.random()*2+1, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    /* --------------------- نظام الطلقات --------------------- */
+    class Bullet {
+      constructor(x, y){ this.x = x; this.y = y; this.radius = 5*scaleFactor; this.speed = 30; }
+      update(dt){ this.y -= this.speed; }
+      draw(){
+        ctx.save();
+        const grad = ctx.createRadialGradient(this.x, this.y, this.radius*0.2, this.x, this.y, this.radius);
+        grad.addColorStop(0, "#ff6600");
+        grad.addColorStop(0.5, "#ff3300");
+        grad.addColorStop(1, "rgba(255,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    let bullets = [], bulletCooldown = 0.2, lastBulletTime = 0;
+    function trySpawnBullet(ct){
+      if(shieldActive && ct - lastBulletTime > bulletCooldown){
+        bullets.push(new Bullet(playerCar.x+playerCar.width/2, playerCar.y));
+        lastBulletTime = ct;
+        AudioManager.playBulletSound();
+      }
+    }
+    /* --------------------- تأثير انفجار --------------------- */
+    class Explosion {
+      constructor(x, y){ this.x=x; this.y=y; this.radius=0; this.maxRadius=30*scaleFactor; this.opacity=1; }
+      update(dt){ this.radius += 100*dt; this.opacity -= 2*dt; }
+      draw(){
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,69,0,${this.opacity})`;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    let explosions = [];
+    /* --------------------- إنشاء الأعداء والعملات --------------------- */
+    const playerCar = new Car(window.innerWidth/2 -20*scaleFactor, 410, 40, 70, "#0ff", true);
+    let enemyCars = [];
+    const enemyColors = ["#ff073a", "#ff8c00", "#8a2be2"];
+    function createEnemyCar(){
+      const lane = lanes[Math.floor(Math.random()*lanes.length)];
+      enemyCars.push(new Car(lane, -Math.random()*300 -70, 40, 70, enemyColors[Math.floor(Math.random()*enemyColors.length)]));
+    }
+    for(let i=1;i<3;i++) createEnemyCar();
+    class Coin {
+      constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
+      update(dt){
+        if(magnetActive){
+          const targetX = playerCar.x+playerCar.width/2;
+          const targetY = playerCar.y+playerCar.height/2;
+          this.x += (targetX - this.x)*0.1;
+          this.y += (targetY - this.y)*0.1;
+        } else {
+          this.y += globalCurrentSpeed*0.5;
+        }
+        this.rotation += dt*2;
+      }
+      draw(){
+        ctx.save();
+        ctx.translate(this.x+this.size/2, this.y+this.size/2);
+        ctx.rotate(this.rotation);
+        const grad = ctx.createRadialGradient(0,0,this.size*0.1, 0,0,this.size/2);
+        grad.addColorStop(0, "#ffd700");
+        grad.addColorStop(0.5, "#ffc107");
+        grad.addColorStop(1, "#ff9800");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0,0,this.size/2,0,Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    const coins = [];
+    setInterval(spawnCoin, 8000);
+    function spawnCoin(){
+      const x = lanes[Math.floor(Math.random()*lanes.length)];
+      coins.push(new Coin(x, -Math.random()*300-70));
+    }
+    /* --------------------- نظام المغناطيس --------------------- */
+    let nextMagnetSpawnDistance = 1100;
+    let magnetActive = false, magnetEffectTimeLeft = 50; // Corrected: magnetEffectTimeLeft was 50 before, now it's correct.
+    class MagnetPiece {
+      constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
+      update(dt){ this.y += globalCurrentSpeed*0.5; this.rotation+= dt*2; }
+      draw(){
+        ctx.save();
+        ctx.translate(this.x+this.size/2, this.y+this.size/2);
+        ctx.rotate(this.rotation);
+        const grad = ctx.createRadialGradient(0,0, this.size*0.1, 0,0, this.size/2);
+        grad.addColorStop(0, "#ff0000");
+        grad.addColorStop(0.5, "#ff5555");
+        grad.addColorStop(1, "#ffaaaa");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0,0, this.size/2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    const magnetPieces = [];
+    /* --------------------- نظام الحماية --------------------- */
+    let nextProtectionSpawnDistance = 1500;
+    let protectionActive = false, protectionTimeLeft = 0; // This is the duration for the protection shield effect
+    const protectionPieces = []; // Array to hold protection pieces on screen
+    class ProtectionPiece { // Class for the protection pickup item
+      constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
+      update(dt){ this.y += globalCurrentSpeed*0.5; this.rotation += dt*2; }
+      draw(){
+        ctx.save();
+        ctx.translate(this.x+this.size/2, this.y+this.size/2);
+        ctx.rotate(this.rotation);
+        const grad = ctx.createRadialGradient(0,0, this.size*0.1, 0,0, this.size/2);
+        grad.addColorStop(0, "orange");
+        grad.addColorStop(0.5, "#ffb84d");
+        grad.addColorStop(1, "#ffcc99");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0,0, this.size/2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    /* --------------------- نظام تعزيز النقاط --------------------- */
+    let nextPointsBoostSpawnDistance = 2300;
+    const pointsBoostPieces = []; // Array to hold points boost pieces on screen
+    class PointsBoostPiece { // Class for the points boost pickup item
+      constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
+      update(dt){ this.y += globalCurrentSpeed*0.5; this.rotation += dt*2; }
+      draw(){
+        ctx.save();
+        ctx.translate(this.x+this.size/2, this.y+this.size/2);
+        ctx.rotate(this.rotation);
+        const grad = ctx.createRadialGradient(0,0, this.size*0.1, 0,0, this.size/2);
+        grad.addColorStop(0, "#ff69b4");
+        grad.addColorStop(0.5, "#ff85c0");
+        grad.addColorStop(1, "#ffc0cb");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0,0, this.size/2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    /* --------------------- رسم الطريق والمباني --------------------- */
+    function drawRoad(){
+      const grad = ctx.createLinearGradient(roadX,0,roadX+roadWidth,0);
+      grad.addColorStop(0, "#111");
+      grad.addColorStop(0.5, "#333");
+      grad.addColorStop(1, "#111");
+      ctx.fillStyle = grad;
+      ctx.fillRect(roadX,0,roadWidth, window.innerHeight);
+      ctx.fillStyle = "#0ff";
+      ctx.fillRect(roadX-4*scaleFactor,0,4*scaleFactor, window.innerHeight);
+      ctx.fillRect(roadX+roadWidth,0,4*scaleFactor, window.innerHeight);
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = "#0ff";
+      let y = laneMarkerY;
+      while(y<window.innerHeight){
+        ctx.fillRect(window.innerWidth/2 - laneMarkerWidth/2, y, laneMarkerWidth, 20*scaleFactor);
+        y += 20*scaleFactor+30;
+      }
+      ctx.shadowBlur = 0;
+    }
+    class Building {
+      constructor(x,y,w,h,color,winColor){
+        this.x=x; this.y=y; this.width=w; this.height=h;
+        this.color = color; this.windowColor = winColor;
+      }
+      draw(ctx){
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = this.windowColor;
+        const sz = 8*scaleFactor, pad = 5*scaleFactor;
+        const cols = Math.floor((this.width-pad)/(sz+pad));
+        const rows = Math.floor((this.height-pad)/(sz+pad));
+        for(let i=0;i<cols;i++){
+          for(let j=0;j<rows;j++){
+            const wx = this.x+pad+i*(sz+pad);
+            const wy = this.y+pad+j*(sz+pad);
+            ctx.fillRect(wx,wy,sz,sz);
+          }
+        }
+      }
+    }
+    let buildingsOffset = 0, leftBuildings = [], rightBuildings = [];
+    function initBuildings(){
+      leftBuildings = [];
+      rightBuildings = [];
+      const leftArea = roadX, rightArea = window.innerWidth - (roadX+roadWidth);
+      for(let i=-1;i<12;i++){
+        const w = (40+Math.random()*20)*scaleFactor;
+        const h = (100+Math.random()*150)*scaleFactor;
+        const bx = Math.random()*(leftArea-w);
+        leftBuildings.push(new Building(bx, i*130*scaleFactor+buildingsOffset, w, h, "#222", "#0ff"));
+        const w2 = (40+Math.random()*20)*scaleFactor;
+        const h2 = (100+Math.random()*150)*scaleFactor;
+        const bx2 = roadX+roadWidth+Math.random()*(rightArea-w2);
+        rightBuildings.push(new Building(bx2, i*130*scaleFactor+buildingsOffset, w2, h2, "#111", "#0ff"));
+      }
+    }
+    initBuildings();
+    function drawBuildings(){
+      leftBuildings.forEach(b=>b.draw(ctx));
+      rightBuildings.forEach(b=>b.draw(ctx));
+      buildingsOffset += 2*scaleFactor;
+      if(buildingsOffset>=130*scaleFactor) buildingsOffset = 0;
+    }
+    function detectCollision(r1, r2){
+      if(superSpeedActive) return false;
+      return r1.x < r2.x+r2.width &&
+             r1.x+r1.width > r2.x &&
+             r1.y < r2.y+r2.height &&
+             r1.y+r1.height > r2.y;
+    }
+    let lastTime = performance.now();
+    /* --------------------- نظام الرتب --------------------- */
+    function getPlayerRank(score){
+      const names = translations[currentLanguage].rankNames;
+      const thresholds = [];
+      let diff=50;
+      thresholds[0]=50;
+      for(let i=1;i<names.length;i++){
+        diff+=20;
+        thresholds[i]=thresholds[i-1]+diff;
+      }
+      let currentRank = names[names.length-1];
+      let icon = rankIcons[names.length-1];
+      for(let i=0;i<thresholds.length;i++){
+        if(score<thresholds[i]){
+          currentRank = names[i];
+          icon = rankIcons[i];
+          break;
+        }
+      }
+      if(currentRank!==highestRank){
+        highestRank = currentRank;
+        localStorage.setItem("highestRank", highestRank);
+      }
+      return { name_ar: currentRank, name_en: currentRank, icon: icon };
+    }
+    function updateDashboard(){
+      const speedFactor = superSpeedActive ? (100 / initialSpeed) : (globalCurrentSpeed / initialSpeed);
+      score = Math.floor((distance/100) * speedFactor);
+      const d = translations[currentLanguage];
+      const distUnit = currentLanguage==="ar"?" كم":" km";
+      document.getElementById("distanceBoard").textContent = d.distance + (distance/1000).toFixed(2) + distUnit;
+      document.getElementById("scoreBoard").textContent = d.score + score;
+      document.getElementById("coinCounter").textContent = d.coins + persistentCoins;
+      document.getElementById("storeCoinCounter").textContent = d.storeCoinCounter + persistentCoins;
+      const btn = document.getElementById("shieldBtn");
+      btn.style.opacity = (persistentCoins>=8 && !shieldActive)?"1":"0.3";
+      btn.style.filter = persistentCoins<8?"brightness(1.2)":"none";
+
+      const superSpeedBtn = document.getElementById("superSpeedBtn");
+      superSpeedBtn.style.opacity = (superSpeedBatch > 0 && !superSpeedActive) ? "1" : "0.3";
+      superSpeedBtn.style.filter = superSpeedBatch <= 0 ? "brightness(1.2)" : "none";
+
+
+      const currSpeed = superSpeedActive ? 100 : getCurrentSpeed(totalTime);
+      const speedUnit = currentLanguage==="ar"?" م/ث":" m/s";
+      document.getElementById("speedometer").textContent = (currentLanguage==="ar"?"السرعة: ":"Speed: ") + currSpeed.toFixed(1)+speedUnit;
+      globalCurrentSpeed = currSpeed;
+      if(shieldActive){
+        const prog = 100*(1-shieldTimeLeft/30);
+        document.querySelector("#shieldMeter div").style.width = prog+"%";
+      } else {
+        document.querySelector("#shieldMeter div").style.width = "0%";
+      }
+      if(magnetActive){
+        const mProg = 100*(magnetEffectTimeLeft/50); // magnetEffectTimeLeft is 50
+        document.querySelector("#magnetMeter div").style.width = mProg+"%";
+      } else {
+        document.querySelector("#magnetMeter div").style.width = "0%";
+      }
+      if(protectionActive){
+        const pProg = 100*(protectionTimeLeft/15); // protectionTimeLeft is 15
+        document.querySelector("#protectionMeter div").style.width = pProg+"%";
+      } else {
+        document.querySelector("#protectionMeter div").style.width = "0%";
+      }
+      // Update quantities in store view (even if not visible, keeps data consistent)
+      document.querySelector(".productQuantity").textContent = d.productQuantity + magnetBatch;
+      document.querySelector(".protectionProductQuantity").textContent = d.productQuantity + protectionBatch;
+      document.querySelector(".pointsBoostProductQuantity").textContent = d.productQuantity + pointsBoostBatch;
+      document.querySelector(".antibioticProductQuantity").textContent = d.productQuantity + antibioticBatch;
+      document.querySelector(".superSpeedProductQuantity").textContent = d.productQuantity + superSpeedBatch;
+    }
+    function showGameOver(){
+      AudioManager.stopAll();
+      MusicManager.stopLoop();
+      MusicManager.startLoop("gameover");
+      const d = translations[currentLanguage];
+      const distUnit = currentLanguage==="ar"?" كم":" km";
+      const currScore = score;
+      const currDist = (distance/1000).toFixed(2);
+      let bestScore = localStorage.getItem("bestScore")||0;
+      let bestDist = localStorage.getItem("bestDistance")||0;
+      if(currScore>bestScore){ bestScore=currScore; localStorage.setItem("bestScore", bestScore); }
+      if(currDist>bestDist){ bestDist=currDist; localStorage.setItem("bestDistance", bestDist); }
+      document.getElementById("featuredScore").innerHTML = "<strong>" + (currentLanguage==="ar"?"أفضل نتيجة مميزة: ":"Best Score: ") + bestScore + "</strong>";
+      document.getElementById("achievementsText").innerHTML = d.score+currScore+"<br>"+d.distance+currDist+distUnit;
+      const rank = getPlayerRank(score);
+      document.getElementById("playerRank").textContent = (currentLanguage==="ar"?"رتبتك: ":"Your Rank: ") + rank.icon + " " + (currentLanguage==="ar"?rank.name_ar:rank.name_en);
+      document.getElementById("gameOverOverlay").style.display = "flex";
+    }
+
+    let resumeTimer; // Timer for resume overlay
+    function showResumeOverlay() {
+        if (antibioticBatch > 0) {
+            document.getElementById("resumeOverlay").style.display = "flex";
+            resumeTimer = setTimeout(() => {
+                hideResumeOverlay();
+                showGameOver();
+            }, 5000);
+        } else {
+            showGameOver();
+        }
+    }
+
+    function hideResumeOverlay() {
+        document.getElementById("resumeOverlay").style.display = "none";
+        clearTimeout(resumeTimer);
+    }
+
+    function resumeGame() {
+        if (antibioticBatch > 0) {
+            antibioticBatch--;
+            localStorage.setItem("antibioticBatch", antibioticBatch);
+            updateDashboard(); // Update dashboard after using antibiotic
+            updateLanguage(); // Update store quantities if language affects them
+            hideResumeOverlay();
+            gameOver = false;
+            enemyCars = []; // Clear current enemies
+            // Make player invincible for a short period
+            protectionActive = true;
+            protectionTimeLeft = 3; // 3 seconds of invincibility after resuming
+
+            setTimeout(() => {
+                lastTime = performance.now();
+                requestAnimationFrame(gameLoop);
+                setTimeout(() => {
+                    for(let i=0;i<3;i++) createEnemyCar(); // Re-introduce enemy cars
+                }, 3000); // Re-spawn enemies after 3 seconds
+            }, 100);
+        } else {
+            hideResumeOverlay();
+            showGameOver();
+        }
+    }
+    document.getElementById("resumeGameBtn").addEventListener("click", resumeGame);
+
+
+    function resetGame(){
+      gameOver=false;
+      distance=0;
+      score=0;
+      totalTime=0;
+      laneMarkerY=0;
+      flameTimer=0;
+      shieldActive=false;
+      shieldTimeLeft=0;
+      magnetActive=false;
+      magnetEffectTimeLeft=50; // Reset magnet duration
+      protectionActive=false;
+      protectionTimeLeft=0; // Reset protection duration
+      superSpeedActive = false;
+      superSpeedTimeLeft = 0;
+      playerCar.x = window.innerWidth/2 -20*scaleFactor;
+      playerCar.vx = 0;
+      enemyCars.length=0;
+      coins.length=0;
+      magnetPieces.length=0;
+      protectionPieces.length=0;
+      pointsBoostPieces.length=0;
+      bullets.length=0;
+      explosions=[];
+      nextMagnetSpawnDistance = 1100;
+      nextProtectionSpawnDistance = 1500;
+      nextPointsBoostSpawnDistance = 2300;
+      for(let i=1;i<3;i++) createEnemyCar();
+      updateDashboard();
+      updateLanguage(); // To update store item quantities after reset if needed
+    }
+    document.getElementById("restartBtn").addEventListener("click", ()=>{
+      resetGame();
+      document.getElementById("gameOverOverlay").style.display = "none";
+      document.getElementById("startOverlay").style.display = "flex";
+      MusicManager.stopLoop();
+      MusicManager.startLoop("start");
+    });
+    /* --------------------- شاشة الانتظار --------------------- */
+    function showWaitingScreen(){
+      calibratedTilt = tilt;
+      document.getElementById("startOverlay").style.display="none";
+      document.getElementById("waitingOverlay").style.display="flex";
+      MusicManager.stopLoop();
+      MusicManager.startLoop("waiting");
+      const bar = document.querySelector(".progress-bar");
+      bar.style.animation = "none";
+      void bar.offsetWidth;
+      bar.style.animation = "progressFill 5s linear forwards";
+      setTimeout(()=>{
+        document.getElementById("waitingOverlay").style.display="none";
+        MusicManager.stopLoop();
+        if(AudioManager.masterGain) AudioManager.masterGain.gain.value = soundsEnabled?0.5:0;
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+      },5000);
+    }
+    function openExternalLink(url){
+      if(navigator.onLine) window.open(url, "_blank");
+      else alert(currentLanguage==="ar"?"أنت غير متصل":"You are offline");
+    }
+    document.getElementById("devFB").addEventListener("click", ()=>openExternalLink("https://www.facebook.com/yourpage"));
+    document.getElementById("devIG").addEventListener("click", ()=>openExternalLink("https://www.instagram.com/yourprofile"));
+    document.getElementById("devYT").addEventListener("click", ()=>openExternalLink("https://www.youtube.com/yourchannel"));
+    /* --------------------- نظام الدرع اليدوي (المغناطيس) --------------------- */
+    let shieldActive = false, shieldTimeLeft = 0; // shieldActive is for manual shield (costs coins)
+    document.getElementById("shieldBtn").addEventListener("click", ()=>{
+      if(persistentCoins>=8 && !shieldActive){ // Cost is 8 coins
+        shieldActive = true;
+        shieldTimeLeft = 30; // Duration 30 seconds
+        persistentCoins-=8;
+        localStorage.setItem("coinBalance", persistentCoins);
+        console.log("Manual Shield activated");
+        const b = document.getElementById("shieldBtn");
+        b.style.background = "linear-gradient(145deg, #ff69b4, #ff1493)"; // Visual feedback
+        b.style.borderColor = "#ff69b4";
+        gsap.fromTo("#shieldBtn",{scale:1.2},{scale:1,duration:0.3});
+        updateDashboard();
+      }
+    });
+    /* --------------------- نظام التسريع الفائق --------------------- */
+    document.getElementById("superSpeedBtn").addEventListener("click", ()=>{
+        if(superSpeedBatch > 0 && !superSpeedActive){
+            superSpeedActive = true;
+            originalCurrentSpeed = globalCurrentSpeed;
+            globalCurrentSpeed = 100;
+            superSpeedBatch--;
+            localStorage.setItem("superSpeedBatch", superSpeedBatch);
+            console.log("Super Speed activated");
+            enemyCars = []; // Clear enemies
+            superSpeedTimeLeft = 10; // CHANGED: Duration is now 10 seconds
+            const superSpeedTimer = setInterval(() => {
+                superSpeedTimeLeft -= 1;
+                if (superSpeedTimeLeft <= 0) {
+                    clearInterval(superSpeedTimer);
+                    superSpeedActive = false;
+                    globalCurrentSpeed = originalCurrentSpeed;
+                    console.log("Super Speed ended");
+                    setTimeout(() => {
+                         for(let i=0;i<3;i++) createEnemyCar();
+                    }, 3000); // Re-spawn enemies after a delay
+                }
+                 updateDashboard();
+            }, 1000);
+            updateDashboard();
+            updateLanguage(); // Update store quantities
+        }
+    });
+    /* --------------------- نظام شراء المغناطيس --------------------- */
+    document.getElementById("buyMagnetBtn").addEventListener("click", ()=>{ // Changed to use ID
+      if(persistentCoins>=100){ // CHANGED: Price is now 100
+        persistentCoins-=100;
+        magnetBatch +=20;
+        localStorage.setItem("coinBalance", persistentCoins);
+        localStorage.setItem("magnetBatch", magnetBatch);
+        updateLanguage(); // To update the displayed quantity and price text
+        updateDashboard(); // To update coin counter
+        alert(currentLanguage==="ar"?"تم شراء دفعة مغناطيس!":"Magnet batch purchased!");
+      } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
+    });
+    /* --------------------- نظام شراء الحماية --------------------- */
+    document.getElementById("buyProtectionBtn").addEventListener("click", ()=>{ // Changed to use ID
+      if(persistentCoins>=50){
+        persistentCoins-=50;
+        protectionBatch +=10;
+        localStorage.setItem("coinBalance", persistentCoins);
+        localStorage.setItem("protectionBatch", protectionBatch);
+        updateLanguage();
+        updateDashboard();
+        alert(currentLanguage==="ar"?"تم شراء دفعة حماية!":"Protection batch purchased!");
+      } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
+    });
+    /* --------------------- نظام شراء تعزيز النقاط --------------------- */
+    document.getElementById("buyPointsBoostBtn").addEventListener("click", ()=>{ // Changed to use ID
+      if(persistentCoins>=100){
+        persistentCoins-=100;
+        pointsBoostBatch +=3;
+        localStorage.setItem("coinBalance", persistentCoins);
+        localStorage.setItem("pointsBoostBatch", pointsBoostBatch);
+        updateLanguage();
+        updateDashboard();
+        alert(currentLanguage==="ar"?"تم شراء دفعة تعزيز النقاط!":"Points boost batch purchased!");
+      } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
+    });
+     /* --------------------- نظام شراء المضاد الحيوي --------------------- */
+    document.getElementById("buyAntibioticBtn").addEventListener("click", ()=>{ // Changed to use ID
+        if(persistentCoins>=100){
+            persistentCoins-=100;
+            antibioticBatch +=3;
+            localStorage.setItem("coinBalance", persistentCoins);
+            localStorage.setItem("antibioticBatch", antibioticBatch);
+            updateLanguage();
+            updateDashboard();
+            alert(currentLanguage==="ar"?"تم شراء دفعة مضاد حيوي!":"Antibiotic batch purchased!");
+        } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
+    });
+     /* --------------------- نظام شراء التسريع الفائق --------------------- */
+    document.getElementById("buySuperSpeedBtn").addEventListener("click", ()=>{ // Changed to use ID
+        if(persistentCoins>=100){
+            persistentCoins-=100;
+            superSpeedBatch +=5;
+            localStorage.setItem("coinBalance", persistentCoins);
+            localStorage.setItem("superSpeedBatch", superSpeedBatch);
+            updateLanguage();
+            updateDashboard();
+            alert(currentLanguage==="ar"?"تم شراء دفعة تسريع فائق!":"Super Speed batch purchased!");
+        } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
+    });
+
+
+    /* --------------------- تحديث الطلقات والتأثيرات --------------------- */
+    function updateBullets(dt){
+      for(let i=bullets.length-1;i>=0;i--){
+        const bl = bullets[i];
+        bl.update(dt);
+        if(bl.y < -10){ bullets.splice(i,1); continue; }
+        for(let j=enemyCars.length-1;j>=0;j--){
+          const ec = enemyCars[j];
+          if(bl.x+bl.radius>ec.x && bl.x-bl.radius<ec.x+ec.width &&
+             bl.y+bl.radius>ec.y && bl.y-bl.radius<ec.y+ec.height){
+            enemyCars.splice(j,1);
+            bullets.splice(i,1);
+            AudioManager.playExplosionSound();
+            vibrateFeedback(50);
+            explosions.push(new Explosion(ec.x+ec.width/2, ec.y+ec.height/2));
+            if (!superSpeedActive) createEnemyCar();
+            break;
+          }
+        }
+      }
+    }
+    function updateExplosions(dt){
+      for(let i=explosions.length-1;i>=0;i--){
+        const ex = explosions[i];
+        ex.update(dt);
+        if(ex.opacity<=0) explosions.splice(i,1);
+      }
+    }
+    function drawExplosions(){ explosions.forEach(exp=>exp.draw()); }
+    /* --------------------- تحديث قطع الحماية --------------------- */
+    function updateProtectionPieces(dt){
+      for(let i=protectionPieces.length-1;i>=0;i--){
+        const pp = protectionPieces[i]; // Renamed sp to pp for clarity (Protection Piece)
+        pp.update(dt);
+        // Check collision with player
+        if(detectCollision(playerCar, {x: pp.x, y: pp.y, width: pp.size, height: pp.size})){
+          if(protectionBatch > 0 && !protectionActive){ // Only activate if not already active and has batch
+            protectionActive = true;
+            protectionTimeLeft = 15; // Duration of protection shield in seconds
+            protectionBatch--; // Decrement from owned batch
+            localStorage.setItem("protectionBatch", protectionBatch);
+            console.log("Protection Shield Activated from pickup!");
+          }
+          protectionPieces.splice(i,1); // Remove piece from game
+          updateDashboard();
+          updateLanguage(); // Update store quantities
+        } else if(pp.y>window.innerHeight){
+          protectionPieces.splice(i,1); // Remove if off-screen
+        }
+      }
+    }
+    /* --------------------- تحديث قطع تعزيز النقاط --------------------- */
+    function updatePointsBoostPieces(dt){
+      for(let i=pointsBoostPieces.length-1;i>=0;i--){
+        const pb = pointsBoostPieces[i];
+        pb.update(dt);
+        if(detectCollision(playerCar, {x: pb.x, y: pb.y, width: pb.size, height: pb.size})){
+          score += 130; // Add 130 points
+          // No need to decrement pointsBoostBatch here, it's decremented when spawning the piece.
+          // This was a misunderstanding. The batch is for spawning them. Once spawned, picking it up gives points.
+          // If you want to make it a consumable that you *use* from inventory to get points, that's a different logic.
+          // The current logic: buy a batch, they spawn if you have them, pick up to get points.
+          console.log("Points Boost collected! +130 points");
+          pointsBoostPieces.splice(i,1);
+          updateDashboard(); // Update score display
+        } else if(pb.y>window.innerHeight){
+          pointsBoostPieces.splice(i,1);
+        }
+      }
+    }
+    /* --------------------- تحديث شعار اللعبة --------------------- */
+    const gameLogoTexts = ["نايترو ستروم", "NITRO STROM", "نايترو ستروم"];
+    let logoIndex = 0;
+    function updateGameLogo(){
+      document.getElementById("gameLogo").textContent = gameLogoTexts[logoIndex];
+      logoIndex = (logoIndex+1)%gameLogoTexts.length;
+    }
+    setInterval(updateGameLogo,2000);
+    /* --------------------- الحلقة الرئيسية --------------------- */
+    function gameLoop(currentTime){
+      if(gameOver && document.getElementById("resumeOverlay").style.display !== "flex") return; // Pause if game over and not showing resume
+
+      const dt = (currentTime - lastTime)/1000;
+      lastTime = currentTime;
+      totalTime += dt;
+
+      const currSpeed = superSpeedActive ? 100 : getCurrentSpeed(totalTime);
+      distance += currSpeed*dt;
+      laneMarkerY += currSpeed*0.5;
+      if(laneMarkerY>laneMarkerHeight+laneMarkerGap) laneMarkerY = 0;
+      flameTimer++;
+      playerCar.updatePhysics();
+      if(playerCar.x < roadX+5*scaleFactor){
+        playerCar.x = roadX+5*scaleFactor;
+        playerCar.vx = 0;
+      }
+      if(playerCar.x > roadX+roadWidth-playerCar.width-5*scaleFactor){
+        playerCar.x = roadX+roadWidth-playerCar.width-5*scaleFactor;
+        playerCar.vx = 0;
+      }
+      playerCar.updateWheels();
+
+      // Manual Shield (purchased with coins)
+      if(shieldActive){
+        shieldTimeLeft -= dt;
+        trySpawnBullet(currentTime/1000); // Allow shooting with manual shield
+        if(shieldTimeLeft<=0){
+          shieldActive = false;
+          const btn = document.getElementById("shieldBtn");
+          btn.style.background = "linear-gradient(145deg, #00ffff, #004d4d)"; // Reset button style
+          btn.style.borderColor = "#0ff";
+          console.log("Manual Shield expired");
+        }
+      }
+      // Magnet (picked up)
+      if(magnetActive){
+        magnetEffectTimeLeft -= dt;
+        if(magnetEffectTimeLeft<=0){ magnetActive = false; }
+      }
+      // Protection Shield (picked up)
+      if(protectionActive){
+        protectionTimeLeft -= dt;
+        if(protectionTimeLeft<=0){ protectionActive = false; }
+      }
+
+
+      if (!superSpeedActive) {
+          enemyCars.forEach(car=>{
+            car.y += currSpeed*0.5;
+            car.updateWheels();
+            if(!protectionActive && detectCollision(playerCar, car)){ // Check protectionActive here
+              gameOver = true;
+              AudioManager.stopAll();
+              AudioManager.playCrash();
+              vibrateFeedback(100);
+              if(antibioticBatch > 0) {
+                  showResumeOverlay();
+              } else {
+                  setTimeout(showGameOver,100);
+              }
+            }
+            if(car.y>window.innerHeight){
+              car.x = lanes[Math.floor(Math.random()*lanes.length)];
+              car.y = -Math.random()*300 - car.height;
+            }
+          });
+      } else {
+           enemyCars.forEach(car=>{
+                car.y += 100 * 0.5; // Super speed movement
+                car.updateWheels();
+                if(car.y > window.innerHeight){
+                     enemyCars.splice(enemyCars.indexOf(car), 1);
+                }
+           });
+      }
+
+
+      for(let i=coins.length-1;i>=0;i--){
+        const c = coins[i];
+        c.update(dt);
+        if(detectCollision(playerCar, {x:c.x, y:c.y, width:c.size, height:c.size})){
+          persistentCoins++;
+          localStorage.setItem("coinBalance", persistentCoins);
+          AudioManager.playCoinSound();
+          vibrateFeedback(30);
+          coins.splice(i,1);
+        } else if(c.y>window.innerHeight){
+          coins.splice(i,1);
+        }
+      }
+      // Spawn Magnet Piece
+      if(distance >= nextMagnetSpawnDistance){ // Always try to spawn if distance is met
+        const x = lanes[Math.floor(Math.random()*lanes.length)];
+        magnetPieces.push(new MagnetPiece(x, -Math.random()*300-70));
+        nextMagnetSpawnDistance += 1100 + Math.random() * 500; // Add some randomness
+      }
+
+      // Spawn Protection Piece only if player has some in batch
+      if(protectionBatch > 0 && distance>= nextProtectionSpawnDistance){
+        const x = lanes[Math.floor(Math.random()*lanes.length)];
+        protectionPieces.push(new ProtectionPiece(x, -Math.random()*300-70));
+        nextProtectionSpawnDistance += 1500 + Math.random() * 600; // Add some randomness
+      }
+
+      // Spawn Points Boost Piece only if player has some in batch
+      if(pointsBoostBatch > 0 && distance >= nextPointsBoostSpawnDistance){
+        const x = lanes[Math.floor(Math.random()*lanes.length)];
+        pointsBoostPieces.push(new PointsBoostPiece(x, -Math.random()*300-70));
+        nextPointsBoostSpawnDistance += 2300 + Math.random() * 700; // Add some randomness
+        // Decrement batch when one is spawned into the game world
+        pointsBoostBatch--;
+        localStorage.setItem("pointsBoostBatch", pointsBoostBatch);
+        updateDashboard();
+        updateLanguage(); // Update store quantities
+        console.log("Points Boost piece spawned, batch remaining: ", pointsBoostBatch);
+      }
+
+      for(let i=magnetPieces.length-1;i>=0;i--){
+        const mp = magnetPieces[i];
+        if(magnetActive){ // If magnet power-up is active, pull pieces
+          const targetX = playerCar.x+playerCar.width/2;
+          const targetY = playerCar.y+playerCar.height/2;
+          mp.x += (targetX-mp.x)*0.1;
+          mp.y += (targetY-mp.y)*0.1;
+        } else { mp.update(dt); } // Else, normal movement
+
+        if(detectCollision(playerCar, {x: mp.x, y: mp.y, width: mp.size, height: mp.size})){
+          if(magnetBatch > 0 && !magnetActive){ // Only activate if not already active and has batch
+            magnetActive = true;
+            magnetEffectTimeLeft = 50; // Duration of magnet effect
+            magnetBatch--; // Decrement from owned batch
+            localStorage.setItem("magnetBatch", magnetBatch);
+            console.log("Magnet Activated from pickup!");
+          }
+          magnetPieces.splice(i,1); // Remove piece from game
+          updateDashboard();
+          updateLanguage(); // Update store quantities
+        } else if(mp.y>window.innerHeight){
+          magnetPieces.splice(i,1); // Remove if off-screen
+        }
+      }
+      updateProtectionPieces(dt);
+      updatePointsBoostPieces(dt);
+      updateBullets(dt);
+      updateExplosions(dt);
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      initBuildings(); // Consider if this needs to be called every frame or less frequently
+      drawBuildings();
+      drawRoad();
+      drawFlame(playerCar);
+      coins.forEach(c=>c.draw());
+      enemyCars.forEach(ec=>ec.draw());
+      bullets.forEach(b=>b.draw());
+      magnetPieces.forEach(mp=>mp.draw());
+      protectionPieces.forEach(sp=>sp.draw());
+      pointsBoostPieces.forEach(pb=>pb.draw());
+      drawExplosions();
+      playerCar.draw();
+      updateDashboard();
+      updateRain(dt);
+      drawRain();
+      drawFog();
+      if(controlMethod==="rotation"){
+        leftBtn.style.display="none";
+        rightBtn.style.display="none";
+      } else {
+        leftBtn.style.display="block";
+        rightBtn.style.display="block";
+      }
+      AudioManager.updateEngineSound(globalCurrentSpeed);
+
+      if (!gameOver || document.getElementById("resumeOverlay").style.display === "flex") {
+           requestAnimationFrame(gameLoop);
+      }
+
+    }
+    /* --------------------- التحقق من اتجاه الجهاز --------------------- */
+    function checkDeviceAndOrientation(){
+      const over = document.getElementById("unsupportedOverlay");
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      const isPortrait = window.innerHeight >= window.innerWidth;
+      over.style.display = (isMobile && isPortrait)?"none":"flex";
+    }
+    checkDeviceAndOrientation();
+    window.addEventListener("resize", checkDeviceAndOrientation);
+    window.addEventListener("orientationchange", checkDeviceAndOrientation);
+    /* --------------------- بدء اللعبة --------------------- */
+    document.getElementById("startBtn").addEventListener("click", ()=>{
+      if(document.getElementById("unsupportedOverlay").style.display==="flex"){
+        alert(currentLanguage==="ar"?"هذه اللعبة مدعومة فقط على الأجهزة المحمولة وبالوضع العمودي.":"This game is supported only on mobile devices in portrait mode.");
+        return;
+      }
+      if(!mainAudioCtx) mainAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(AudioManager.audioCtx && AudioManager.audioCtx.state==="suspended"){
+        AudioManager.audioCtx.resume().then(()=>console.log("AudioContext resumed"));
+      }
+      AudioManager.init();
+      MusicManager.stopLoop();
+      document.getElementById("startOverlay").style.display="none";
+      showWaitingScreen();
+    });
+    document.getElementById("startOverlay").addEventListener("transitionstart", ()=>{ // Typo fixed: transitionstart
+      MusicManager.stopLoop();
+      MusicManager.startLoop("start");
+    });
+    // Moved icon generation to loadSettings to ensure it runs after DOM is ready
+    // updateLanguage(); // Called within loadSettings
+    MusicManager.startLoop("start");
+    /* --------------------- منطق شاشة الإعدادات --------------------- */
+    document.getElementById("settingsBtn").addEventListener("click", ()=>{
+      document.getElementById("startOverlay").style.display="none";
+      document.getElementById("settingsOverlay").style.display="flex";
+    });
+    document.getElementById("backSettingsBtn").addEventListener("click", ()=>{
+      document.getElementById("settingsOverlay").style.display="none";
+      document.getElementById("startOverlay").style.display="flex";
+    });
+    /* --------------------- منطق شاشة الإنجازات --------------------- */
+    document.getElementById("achievementsBtn").addEventListener("click", ()=>{
+      document.getElementById("startOverlay").style.display="none";
+      document.getElementById("achievementsOverlay").style.display="flex";
+      const bestScore = localStorage.getItem("bestScore")||0;
+      const bestDist = localStorage.getItem("bestDistance")||0;
+      const unit = currentLanguage==="ar"?" كم":" km";
+      document.getElementById("achievementsList").innerHTML =
+        `<li style="background: rgba(0,255,255,0.1); margin: 5px 0; padding: 10px; border: 2px solid #0ff; border-radius: 8px;">${translations[currentLanguage].score}${bestScore}</li>
+         <li style="background: rgba(0,255,255,0.1); margin: 5px 0; padding: 10px; border: 2px solid #0ff; border-radius: 8px;">${translations[currentLanguage].distance}${bestDist}${unit}</li>`;
+    });
+    document.getElementById("backAchievementsBtn").addEventListener("click", ()=>{
+      document.getElementById("achievementsOverlay").style.display="none";
+      document.getElementById("startOverlay").style.display="flex";
+    });
+    /* --------------------- منطق شاشة المتجر --------------------- */
+    document.getElementById("storeBtn").addEventListener("click", ()=>{
+      document.getElementById("startOverlay").style.display="none";
+      document.getElementById("storeOverlay").style.display="flex";
+    });
+    document.getElementById("backStoreBtn").addEventListener("click", ()=>{
+      document.getElementById("storeOverlay").style.display="none";
+      document.getElementById("startOverlay").style.display="flex";
+    });
+    /* --------------------- نهاية الكود --------------------- */
+  </script>
+
+  </body>
+</html>
