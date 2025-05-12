@@ -8,6 +8,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"
           integrity="sha512-ds/AB4h27GGrkJwUzExlFl+GjQ9qiJlU7n+WspnZFxZj55qz0pvRBoBZY+1x2ea9aM21SdjW49QwscUbf2pL0w=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3979887819051970"
+     crossorigin="anonymous"></script>
   <style>
     /* إعدادات عامة */
     body {
@@ -18,7 +20,7 @@
       animation: gradientAnimation 15s ease infinite;
       direction: rtl;
       font-family: 'Orbitron', Arial, sans-serif;
-      color: #0ff;
+      color: #0ff; /* سيان افتراضي للنص */
     }
     @keyframes gradientAnimation {
       0% { background-position: 0% 50%; }
@@ -27,11 +29,56 @@
     }
     canvas { display: block; margin: 0 auto; }
     #gameCanvas { background: radial-gradient(ellipse at center, #001 0%, #000 100%); }
+
+    /* -------------- شاشة التحميل الأولية -------------- */
+    #initialLoadingOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000; /* خلفية سوداء بسيطة لشاشة التحميل */
+      display: flex; /* عرض افتراضي */
+      flex-direction: column;
+      justify-content: flex-end; /* محاذاة المحتوى للأسفل */
+      align-items: center;
+      z-index: 1001; /* أعلى من الطبقات الأخرى */
+      padding-bottom: 40px; /* مساحة أسفل شريط التقدم والنص */
+      box-sizing: border-box;
+    }
+    #initialLoadingProgressContainer {
+      width: 60%;
+      height: 12px;
+      border: 2px solid #00ffff; /* لون سيان حاد */
+      border-radius: 5px;
+      overflow: hidden;
+      background: rgba(0, 255, 255, 0.1); /* خلفية شفافة قليلاً لشريط التقدم */
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); /* توهج نايترو */
+      margin-bottom: 15px; /* مسافة بين الشريط والنص */
+    }
+    #initialLoadingProgressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ffff, #00bfff); /* تدرج سيان إلى أزرق سماوي */
+      box-shadow: 0 0 10px #00ffff; /* توهج داخلي */
+      animation: initialProgressFill 7s linear forwards; /* تحريك الملء خلال 7 ثوان */
+    }
+    @keyframes initialProgressFill {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+    #initialLoadingText {
+      font-size: 14px;
+      color: #00ffff; /* نفس لون شريط التقدم */
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 8px #00ffff; /* توهج خفيف للنص */
+    }
+    /* -------------- نهاية شاشة التحميل الأولية -------------- */
+
+
     /* العدادات */
     #speedometer, #scoreBoard, #distanceBoard, #coinCounter {
       position: absolute;
       font-size: 10px;
-      color: #ff69b4;
+      color: #ff69b4; /* وردي نيون */
       background: rgba(0,0,0,0.7);
       padding: 3px 6px;
       border: 2px solid #ff69b4;
@@ -63,59 +110,35 @@
     #superSpeedBtn {
       position: absolute;
       bottom: 250px;
-      left: 20px; /* Placed on the opposite side */
+      left: 20px;
       z-index: 6;
       font-size: 24px;
-      background: linear-gradient(145deg, #ff00ff, #990099); /* Example color */
-      border: 2px solid #ff00ff; /* Example color */
+      background: linear-gradient(145deg, #ff00ff, #990099); /* ماجنتا نيون */
+      border: 2px solid #ff00ff;
       border-radius: 6px;
       padding: 6px;
       cursor: pointer;
       transition: opacity 0.3s, transform 0.2s;
-      box-shadow: 0 0 15px #ff00ff; /* Example color */
+      box-shadow: 0 0 15px #ff00ff;
     }
      #superSpeedBtn:active { transform: scale(1.1); }
 
-    /* شريط الدرع (المغناطيس) */
-    #shieldMeter {
+    /* أشرطة التقدم */
+    #shieldMeter, #magnetMeter, #protectionMeter {
       position: absolute;
-      bottom: 220px;
       right: 20px;
       width: 70px;
       height: 4px;
-      border: 1px solid #ff69b4;
       border-radius: 4px;
       z-index: 6;
-      background: rgba(0,255,255,0.1);
     }
+    #shieldMeter { bottom: 220px; border: 1px solid #ff69b4; background: rgba(255,105,180,0.1); }
     #shieldMeter div { height: 100%; background: #ff69b4; width: 0%; }
-    /* شريط المغناطيس */
-    #magnetMeter {
-      position: absolute;
-      bottom: 210px;
-      right: 20px;
-      width: 70px;
-      height: 4px;
-      border: 1px solid red;
-      border-radius: 4px;
-      z-index: 6;
-      background: rgba(255,0,0,0.1);
-    }
+    #magnetMeter { bottom: 210px; border: 1px solid red; background: rgba(255,0,0,0.1); }
     #magnetMeter div { height: 100%; background: red; width: 0%; transform-origin: right center; }
-    /* شريط الحماية */
-    #protectionMeter {
-      position: absolute;
-      bottom: 200px;
-      right: 20px;
-      width: 70px;
-      height: 4px;
-      border: 1px solid orange;
-      border-radius: 4px;
-      z-index: 6;
-      background: rgba(255,165,0,0.1);
-    }
+    #protectionMeter { bottom: 200px; border: 1px solid orange; background: rgba(255,165,0,0.1); }
     #protectionMeter div { height: 100%; background: orange; width: 0%; transform-origin: right center; }
-    /* لا يوجد شريط تقدم لقطعة تعزيز النقاط */
+
     /* أزرار التحكم */
     .control-btn {
       position: absolute;
@@ -145,8 +168,8 @@
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: linear-gradient(135deg, #6a0dad, #8a2be2, #da70d6);
-      display: flex;
+      background: linear-gradient(135deg, #6a0dad, #8a2be2, #da70d6); /* تدرج بنفسجي */
+      display: none; /* إخفاء افتراضي، ستظهر بعد التحميل */
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -154,13 +177,10 @@
       color: #0ff;
       font-size: 32px;
       z-index: 10;
+      padding-bottom: 40px; /* إضافة مساحة للفوتر */
+      box-sizing: border-box;
     }
-    #startEffectsCanvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: -1;
-    }
+
     /* شعار البداية */
     #gameLogo {
       position: absolute;
@@ -182,9 +202,9 @@
       100% { transform: translate(0); opacity: 1; filter: hue-rotate(0deg); }
     }
     /* أزرار شاشة البداية مع أيقونات مدمجة */
-    #startOverlay button {
-      padding: 12px 20px; /* Adjusted padding for icon */
-      font-size: 20px; /* Adjusted font size */
+    #startOverlay button:not(.footer-link-btn) { /* استثناء أزرار الفوتر */
+      padding: 12px 20px;
+      font-size: 20px;
       border: 2px solid #ff69b4;
       background: linear-gradient(145deg, #ff69b4, #ff1493);
       color: #fff;
@@ -194,56 +214,91 @@
       margin-bottom: 10px;
       z-index: 1;
       box-shadow: 0 0 10px #ff69b4;
-      display: flex; /* For aligning icon and text */
-      align-items: center; /* For aligning icon and text */
-      justify-content: center; /* For aligning icon and text */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    #startOverlay button img { /* Style for icons in start buttons */
-        margin-right: 8px; /* Space between icon and text */
-        width: 24px; /* Icon size */
-        height: 24px; /* Icon size */
+    #startOverlay button:not(.footer-link-btn) img {
+        margin-right: 8px;
+        width: 24px;
+        height: 24px;
     }
 
-    #startOverlay button:hover {
+    #startOverlay button:not(.footer-link-btn):hover {
       background: rgba(255,105,180,0.8);
       transform: scale(1.05);
       box-shadow: 0 0 15px #ff69b4;
     }
-    /* شاشة الإعدادات */
-    #settingsOverlay {
+     /* فوتر شاشة البداية */
+    #startFooter {
+        position: absolute;
+        bottom: 10px;
+        width: 100%;
+        text-align: center;
+        z-index: 1;
+    }
+    #startFooter a {
+        color: #0ff; /* لون سيارة اللاعب */
+        text-decoration: none;
+        font-size: 12px; /* خط صغير نسبياً */
+        margin: 0 10px;
+        cursor: pointer;
+        transition: text-shadow 0.3s;
+    }
+     #startFooter a:hover {
+         text-shadow: 0 0 8px #0ff;
+     }
+    /* شاشة الإعدادات, الإنجازات, المتجر, من نحن, تواصل معنا */
+    #settingsOverlay, #achievementsOverlay, #storeOverlay, #aboutUsOverlay, #contactUsOverlay {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.95);
       display: none;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      gap: 20px;
-      color: #0ff;
-      font-size: 32px;
-      z-index: 11;
-    }
-    #settingsOverlay button {
-      padding: 8px 18px;
-      font-size: 18px;
-    }
-    /* شاشة الإنجازات */
-    #achievementsOverlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95);
-      display: none;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      padding-top: 60px;
-      gap: 15px;
+      padding: 60px 20px 20px 20px; /* زيادة الحشوة العلوية للعناوين */
+      box-sizing: border-box;
+      gap: 15px; /* تقليل الفجوة قليلاً */
       color: #0ff;
       font-size: 28px;
       z-index: 11;
+      overflow-y: auto; /* للسماح بالتمرير إذا لزم الأمر */
     }
+    /* تخصيص شاشة الإنجازات */
+    #achievementsOverlay { justify-content: flex-start; }
+    /* تخصيص شاشة الإعدادات */
+    #settingsOverlay { justify-content: center; }
+    /* تخصيص شاشة المتجر */
+     #storeOverlay { padding-top: 20px; }
+    /* عنوان الشاشات الفرعية */
+    #settingsTitle, #achievementsTitle, #storeTitle, #aboutUsTitle, #contactUsTitle {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+        font-size: 32px; /* حجم عنوان أكبر */
+        text-shadow: 0 0 10px #0ff;
+    }
+    /* أزرار الشاشات الفرعية */
+    #settingsOverlay button, #aboutUsOverlay button, #contactUsOverlay button, #storeOverlay button {
+      padding: 8px 18px;
+      font-size: 18px;
+      border: 2px solid #ff69b4; /* استخدام لون ثابت للأزرار */
+      background: linear-gradient(145deg, #ff69b4, #ff1493);
+      color: #fff;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background 0.3s, transform 0.3s;
+      box-shadow: 0 0 10px #ff69b4;
+      width: 80%; /* عرض موحد للأزرار */
+      max-width: 300px; /* حد أقصى للعرض */
+    }
+     #settingsOverlay button:hover, #aboutUsOverlay button:hover, #contactUsOverlay button:hover, #storeOverlay button:hover {
+        background: rgba(255,105,180,0.8);
+        transform: scale(1.05);
+     }
     /* خانة أعلى رتبة */
     #highestRankDisplay {
       width: 80%;
@@ -254,28 +309,22 @@
       font-size: 24px;
       color: #0ff;
       text-align: center;
+      max-width: 400px;
     }
+    /* قائمة الإنجازات */
+    #achievementsList {
+       list-style: none; padding: 0; margin: 0; width: 80%; max-width: 400px;
+    }
+     #achievementsList li {
+        background: rgba(0,255,255,0.1); margin: 5px 0; padding: 10px; border: 2px solid #0ff; border-radius: 8px; font-size: 20px;
+     }
     /* شاشة المتجر */
-    #storeOverlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 20px;
-      gap: 15px;
-      color: #0ff;
-      font-size: 28px;
-      z-index: 11;
-      overflow-y: auto;
-    }
     #storeHeader {
       width: 90%;
       text-align: center;
+      max-width: 450px;
     }
-    #storeHeader h2 { margin: 0; }
+    #storeHeader h2 { margin: 0; font-size: 28px; /* تعديل حجم العنوان للمتجر */ }
     #storeCoinCounter {
       font-size: 20px;
       margin-top: 5px;
@@ -292,6 +341,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      max-width: 450px;
     }
     .productImage {
       width: 50px;
@@ -302,8 +352,9 @@
     .productInfo { flex: 1; }
     .productInfo h3 {
       margin: 0 0 5px 0;
-      font-size: 24px;
+      font-size: 20px; /* تصغير خط اسم المنتج */
     }
+    .productInfo p { font-size: 14px; margin: 3px 0; } /* تصغير خط وصف المنتج والسعر */
     .buyBtn, .buyProtectionBtn, .buyPointsBoostBtn, .buyAntibioticBtn, .buySuperSpeedBtn {
       padding: 8px 16px;
       background: linear-gradient(145deg, #00cc00, #009900);
@@ -312,6 +363,9 @@
       border-radius: 6px;
       cursor: pointer;
       transition: transform 0.2s;
+      font-size: 16px; /* تعديل حجم خط زر الشراء */
+      width: auto; /* جعل زر الشراء يتناسب مع المحتوى */
+      margin-top: 5px;
     }
     .buyBtn:active, .buyProtectionBtn:active, .buyPointsBoostBtn:active, .buyAntibioticBtn:active, .buySuperSpeedBtn:active { transform: scale(1.05); }
     /* زر الرجوع */
@@ -326,9 +380,10 @@
       color: #fff;
       cursor: pointer;
       border-radius: 10px;
-      z-index: 12;
+      z-index: 12; /* يجب أن يكون أعلى من محتوى الشاشة */
       box-shadow: 0 0 10px #ff69b4;
       transition: background 0.3s, transform 0.3s;
+      width: auto; /* زر الرجوع لا يحتاج عرض 80% */
     }
     .backBtn:hover {
       background: rgba(255,105,180,0.8);
@@ -336,6 +391,132 @@
     }
     /* إزالة زر الرجوع في شاشة الخسارة */
     #gameOverOverlay .backBtn { display: none; }
+
+    /* شاشة من نحن */
+    #aboutUsContent {
+        font-size: 16px;
+        line-height: 1.6;
+        text-align: center;
+        width: 90%;
+        max-width: 500px;
+    }
+    #aboutUsContent h3 {
+       font-size: 20px;
+       color: #ff69b4;
+       margin-top: 15px;
+       margin-bottom: 5px;
+    }
+
+    /* شاشة تواصل معنا */
+    #contactUsOverlay { justify-content: flex-start; }
+    #contactIntro {
+        font-size: 18px;
+        margin-bottom: 15px;
+        text-align: center;
+        width: 90%;
+        max-width: 500px;
+    }
+    #contactMessage, #contactEmail {
+        width: 90%;
+        max-width: 500px;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 2px solid #0ff;
+        background: rgba(0, 255, 255, 0.1);
+        color: #fff;
+        font-family: inherit; /* استخدام خط اللعبة */
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    #contactMessage {
+        height: 120px;
+        resize: none; /* منع تغيير حجم خانة الرسالة */
+    }
+    #contactEmail { display: none; } /* إخفاء خانة الإيميل افتراضيًا */
+    #sendContactBtn {
+        display: none; /* إخفاء زر الإرسال افتراضيًا */
+        background: linear-gradient(145deg, #00cc00, #009900); /* لون أخضر للإرسال */
+        border-color: #00cc00;
+        box-shadow: 0 0 10px #00cc00;
+    }
+     #sendContactBtn:hover {
+         background: rgba(0,204,0,0.8);
+     }
+
+    /* نافذة تأكيد الإرسال */
+    #contactConfirmationPopup {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 200, 0, 0.8); /* خلفية خضراء شفافة */
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 1002; /* أعلى من كل شيء */
+        display: none; /* مخفية افتراضيًا */
+        box-shadow: 0 0 10px rgba(0, 200, 0, 0.5);
+        text-align: center;
+    }
+
+    /* نافذة سياسة الخصوصية */
+    #privacyPolicyPopup {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: none; /* مخفية افتراضيًا */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* أعلى من الشاشات الأخرى */
+        padding: 20px;
+        box-sizing: border-box;
+        color: #fff; /* لون النص أبيض لسهولة القراءة */
+    }
+    #privacyPolicyContent {
+        background: rgba(0, 255, 255, 0.05); /* خلفية شفافة قليلاً */
+        border: 2px solid #0ff;
+        border-radius: 10px;
+        padding: 20px;
+        max-width: 90%;
+        max-height: 70%;
+        overflow-y: auto;
+        text-align: right; /* محاذاة النص العربي */
+        font-size: 14px; /* حجم خط مناسب للقراءة */
+        line-height: 1.7;
+    }
+     #privacyPolicyContent h2 {
+         text-align: center;
+         color: #0ff;
+         margin-top: 0;
+         font-size: 20px;
+     }
+     #privacyPolicyContent h3 {
+         color: #ff69b4; /* لون مميز للعناوين الفرعية */
+         font-size: 16px;
+         margin-top: 15px;
+         margin-bottom: 5px;
+     }
+    #agreePrivacyBtn {
+        margin-top: 20px;
+        padding: 10px 25px;
+        font-size: 18px;
+        border: 2px solid #00ff00;
+        background: linear-gradient(145deg, #00cc00, #009900);
+        color: #fff;
+        cursor: pointer;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #00ff00;
+        transition: background 0.3s, transform 0.3s;
+    }
+    #agreePrivacyBtn:hover {
+      background: rgba(0,204,0,0.8);
+      transform: scale(1.05);
+    }
+
     /* شاشة الانتظار */
     #waitingOverlay {
       position: absolute;
@@ -344,29 +525,34 @@
       background: rgba(0,0,0,0.9);
       display: none;
       flex-direction: column;
-      justify-content: center;
+      /* justify-content: center; /* تم الإبقاء عليه لضمان التوسيط العمودي العام إذا لزم الأمر */
+      justify-content: flex-end; /* محاذاة المحتوى للأسفل لتثبيت الشريط */
       align-items: center;
       z-index: 12;
       color: #0ff;
       font-size: 14px;
+      padding-bottom: 30px; /* إضافة حشوة سفلية لتجنب الالتصاق بالحافة */
+      box-sizing: border-box; /* لضمان حساب الحشوة بشكل صحيح */
     }
-    .progress-container {
-      position: absolute;
-      bottom: 30px;
+    .progress-container { /* حاوية شريط تقدم الانتظار */
+      /* position: absolute; /* لم تعد مطلوبة */
+      /* bottom: 30px; /* لم تعد مطلوبة */
       width: 60%;
       height: 12px;
       border: 2px solid #0ff;
       border-radius: 5px;
       overflow: hidden;
       background: rgba(0,255,255,0.1);
+      margin-top: auto; /* دفع الشريط للأسفل ضمن flexbox */
+      margin-bottom: 15px; /* مسافة إضافية أسفل الشريط */
     }
-    .progress-bar {
+    .progress-bar { /* شريط تقدم الانتظار الداخلي */
       height: 100%;
       width: 0%;
       background: #0ff;
-      animation: progressFill 5s linear forwards;
+      animation: progressFill 5s linear forwards; /* 5 ثواني لشاشة الانتظار */
     }
-    @keyframes progressFill {
+    @keyframes progressFill { /* تحريك شريط الانتظار */
       from { width: 0%; }
       to { width: 100%; }
     }
@@ -470,6 +656,12 @@
   </style>
   </head>
 <body>
+  <div id="initialLoadingOverlay">
+    <div id="initialLoadingProgressContainer">
+      <div id="initialLoadingProgressBar"></div>
+    </div>
+    <p id="initialLoadingText">بواسطة ألعاب عزيز by AZIZ GAMES</p>
+  </div>
   <div id="unsupportedOverlay">
     <p>هذه اللعبة مدعومة فقط على الأجهزة المحمولة وبالوضع العمودي.<br>يرجى استخدام هاتفك أو تحويل الشاشة إلى الوضع العمودي.</p>
   </div>
@@ -484,15 +676,21 @@
   <canvas id="gameCanvas"></canvas>
   <button id="leftBtn" class="control-btn">←</button>
   <button id="rightBtn" class="control-btn">→</button>
+
   <div id="startOverlay">
-    <canvas id="startEffectsCanvas"></canvas>
     <div id="gameLogo">NITRO STROM</div>
     <div id="startMessage">اضغط "ابدأ اللعب" للانطلاق</div>
     <button id="startBtn">ابدأ اللعب</button>
     <button id="settingsBtn"><img id="settingsBtnIcon" src="" alt="Settings Icon"> <span id="settingsBtnText"></span></button>
     <button id="achievementsBtn"><img id="achievementsBtnIcon" src="" alt="Achievements Icon"> <span id="achievementsBtnText"></span></button>
     <button id="storeBtn"><img id="storeBtnIcon" src="" alt="Store Icon"> <span id="storeBtnText"></span></button>
+    <div id="startFooter">
+        <a id="privacyPolicyLink">سياسة الخصوصية</a> |
+        <a id="aboutUsLink">من نحن</a> |
+        <a id="contactUsLink">تواصل معنا</a>
+    </div>
   </div>
+
   <div id="settingsOverlay">
     <button class="backBtn" id="backSettingsBtn"></button>
     <h2 id="settingsTitle">الإعدادات</h2>
@@ -500,12 +698,14 @@
     <button id="controlMethodBtn">التحكم بالأزرار</button>
     <button id="langToggleBtn">English</button>
   </div>
+
   <div id="achievementsOverlay">
     <button class="backBtn" id="backAchievementsBtn"></button>
     <h2 id="achievementsTitle">الإنجازات</h2>
     <div id="highestRankDisplay"></div>
-    <ul id="achievementsList" style="list-style: none; padding: 0; margin: 0; width: 80%;"></ul>
+    <ul id="achievementsList"></ul>
   </div>
+
   <div id="storeOverlay">
     <button class="backBtn" id="backStoreBtn"></button>
     <div id="storeHeader">
@@ -565,17 +765,77 @@
        </div>
     </div>
   </div>
+
+  <div id="aboutUsOverlay">
+      <button class="backBtn" id="backAboutUsBtn"></button>
+      <h2 id="aboutUsTitle">من نحن</h2>
+      <div id="aboutUsContent">
+          مرحبًا بك في ألعاب عزيز!<br><br>
+          نحن شركة ناشئة متخصصة في نشر وتوزيع الألعاب، مملوكة للمصمم والمطور عبدالعزيز عبدالله مسعد الشرجي. نهدف إلى تقديم تجارب ألعاب ممتعة ومثيرة للمستخدمين.<br><br>
+          <h3>مهمتنا:</h3>
+          - تقديم ألعاب عالية الجودة.<br>
+          - تحسين تجربة المستخدم.<br>
+          - الاستماع إلى ملاحظات المستخدمين.<br><br>
+          <h3>عن المالك:</h3>
+          - عبدالعزيز عبدالله مسعد الشرجي: مطور ومصمم ألعاب، منشئ محتوى رقمي، ومصمم جرافيكي.<br><br>
+          <h3>موقعنا:</h3>
+          - شمال غرب قعطبة - محافظة الضالع - الجمهورية اليمنية.<br><br>
+          شكرًا لاهتمامك بألعاب عزيز!
+      </div>
+  </div>
+
+  <div id="contactUsOverlay">
+      <button class="backBtn" id="backContactUsBtn"></button>
+      <h2 id="contactUsTitle">تواصل معنا</h2>
+      <p id="contactIntro">مرحبًا بك! إذا كان لديك أي استفسارات أو ملاحظات حول لعبتنا نايترو ستروم، يرجى ملء النموذج أدناه:</p>
+      <textarea id="contactMessage" placeholder="اكتب رسالتك هنا..."></textarea>
+      <input type="email" id="contactEmail" placeholder="أدخل بريدك الإلكتروني...">
+      <button id="sendContactBtn">إرسال</button>
+  </div>
+
+  <div id="privacyPolicyPopup">
+      <div id="privacyPolicyContent">
+          <h2 id="privacyTitle">سياسة الخصوصية</h2>
+          <h3 id="privacyIntroTitle">مقدمة</h3>
+          <p id="privacyIntroText">نحن العاب عزيز نهتم بخصوصية مستخدمينا. هذه السياسة توضح كيفية جمع واستخدام وحماية بياناتك في لعبتنا نايترو ستروم.</p>
+          <h3 id="privacyDataTitle">البيانات التي نجمعها</h3>
+          <p id="privacyDataText">
+              - البريد الإلكتروني: عند استخدام خاصية "تواصل معنا" لإرسال رسائل إلى المطور.<br>
+              - رسائل المستخدم: الرسائل التي ترسلها إلى المطور من خلال خاصية "تواصل معنا".<br>
+              - سجل اللاعب: جمع بيانات اللاعبين في قائمة الصدارة في اللعب الجماعي
+          </p>
+          <h3 id="privacyUsageTitle">استخدام البيانات</h3>
+          <p id="privacyUsageText">
+              - الرد على استفساراتك: استخدام بياناتك للرد على رسائلك.<br>
+              - تحسين تجربة المستخدم: استخدام بياناتك لتحسين تجربة المستخدم في اللعبة.
+          </p>
+          <h3 id="privacyProtectionTitle">حماية البيانات</h3>
+          <p id="privacyProtectionText">
+              - التشفير: حماية بياناتك من الوصول غير المصرح به.<br>
+              - التخزين الآمن: تخزين بياناتك في خوادم آمنة.
+          </p>
+          <h3 id="privacySharingTitle">مشاركة البيانات</h3>
+          <p id="privacySharingText">- لا يتم مشاركة بياناتك: مع أي طرف ثالث بدون موافقتك.</p>
+          <h3 id="privacyRightsTitle">حقوق المستخدمين</h3>
+          <p id="privacyRightsText">
+              - الوصول إلى البيانات: طلب نسخة من بياناتك.<br>
+              - حذف البيانات: طلب حذف بياناتك.
+          </p>
+          <h3 id="privacyUpdatesTitle">التحديثات</h3>
+          <p id="privacyUpdatesText">- نقوم بتحديث سياسة الخصوصية: بشكل دوري.</p>
+          <p id="privacyConsentText">باستخدام لعبتنا، فإنك توافق على سياسة الخصوصية هذه.</p>
+      </div>
+      <button id="agreePrivacyBtn">موافق</button>
+  </div>
+
+  <div id="contactConfirmationPopup">سنكون سعداء بالرد على استفساراتك وسماع ملاحظاتك!</div>
+
   <div id="waitingOverlay">
     <div class="progress-container">
       <div class="progress-bar"></div>
     </div>
-    <div id="developerInfo">
-      <div id="developerTitle">تعرف على المطور</div>
-      <button id="devFB">فيسبوك</button>
-      <button id="devIG">إنستقرام</button>
-      <button id="devYT">يوتيوب</button>
     </div>
-  </div>
+
   <div id="gameOverOverlay">
     <div id="gameOverMessage">انتهت اللعبة!</div>
     <div id="featuredScore"></div>
@@ -583,10 +843,12 @@
     <div id="playerRank"></div>
     <button id="restartBtn">إعادة اللعب</button>
   </div>
+
   <div id="resumeOverlay">
       <div class="resume-message">هل تريد استئناف اللعب باستخدام مضاد حيوي؟</div>
       <button id="resumeGameBtn">استئناف اللعب</button>
   </div>
+
   <script>
     /* ===================== دوال توليد الأيقونات برمجياً ===================== */
     // توليد أيقونة للإعدادات (رمز التروس)
@@ -693,21 +955,17 @@
         coins: 'العملات: ',
         controlButtons: 'التحكم بالأزرار',
         controlRotation: 'التحكم بالتدوير',
-        developerTitle: 'تعرف على المطور',
-        devFB: 'فيسبوك',
-        devIG: 'إنستقرام',
-        devYT: 'يوتيوب',
         rankNames: ["مبتدئ","محترف","بطل","منتصر","فاتح","سيد","أمير","غازي","قاهر","قائد","حاكم","سلطان","إمبراطور","ملك"],
         back: "رجوع",
-        settingsTitle: "الإعدادات", // Removed icon from here
-        achievementsTitle: "الإنجازات", // Removed icon from here
-        storeTitle: "المتجر", // Removed icon from here
+        settingsTitle: "الإعدادات",
+        achievementsTitle: "الإنجازات",
+        storeTitle: "المتجر",
         storeCoinCounter: "رصيد العملات: ",
         productMagnetName: "المغناطيس 🧲",
-        productMagnetDesc: "دفعة: 20 قطعة مغناطيس - السعر: 100 عملة", // Updated price
+        productMagnetDesc: "دفعة: 20 قطعة مغناطيس - السعر: 100 عملة",
         productPrice: "السعر: ",
         productQuantity: "الكمية: ",
-        buyButtonText: "شراء", // New translation key for generic buy button
+        buyButtonText: "شراء",
         productProtectionName: "الحماية 🛡️",
         productProtectionDesc: "دفعة: 10 قطع حماية - السعر: 50 عملة",
         productProtectionPrice: "السعر: 50 عملة",
@@ -729,7 +987,54 @@
         startStoreBtn: "المتجر",
         highestRankLabel: "أعلى رتبة: ",
         resumeMessage: "هل تريد استئناف اللعب باستخدام مضاد حيوي؟",
-        resumeGameBtn: "استئناف اللعب"
+        resumeGameBtn: "استئناف اللعب",
+        // نصوص الفوتر
+        privacyPolicyLink: "سياسة الخصوصية",
+        aboutUsLink: "من نحن",
+        contactUsLink: "تواصل معنا",
+        // نصوص نافذة سياسة الخصوصية
+        privacyTitle: "سياسة الخصوصية",
+        privacyIntroTitle: "مقدمة",
+        privacyIntroText: "نحن العاب عزيز نهتم بخصوصية مستخدمينا. هذه السياسة توضح كيفية جمع واستخدام وحماية بياناتك في لعبتنا نايترو ستروم.",
+        privacyDataTitle: "البيانات التي نجمعها",
+        privacyDataText: `- البريد الإلكتروني: عند استخدام خاصية "تواصل معنا" لإرسال رسائل إلى المطور.<br>
+                          - رسائل المستخدم: الرسائل التي ترسلها إلى المطور من خلال خاصية "تواصل معنا".<br>
+                          - سجل اللاعب: جمع بيانات اللاعبين في قائمة الصدارة في اللعب الجماعي`,
+        privacyUsageTitle: "استخدام البيانات",
+        privacyUsageText: `- الرد على استفساراتك: استخدام بياناتك للرد على رسائلك.<br>
+                           - تحسين تجربة المستخدم: استخدام بياناتك لتحسين تجربة المستخدم في اللعبة.`,
+        privacyProtectionTitle: "حماية البيانات",
+        privacyProtectionText: `- التشفير: حماية بياناتك من الوصول غير المصرح به.<br>
+                              - التخزين الآمن: تخزين بياناتك في خوادم آمنة.`,
+        privacySharingTitle: "مشاركة البيانات",
+        privacySharingText: "- لا يتم مشاركة بياناتك: مع أي طرف ثالث بدون موافقتك.",
+        privacyRightsTitle: "حقوق المستخدمين",
+        privacyRightsText: `- الوصول إلى البيانات: طلب نسخة من بياناتك.<br>
+                            - حذف البيانات: طلب حذف بياناتك.`,
+        privacyUpdatesTitle: "التحديثات",
+        privacyUpdatesText: "- نقوم بتحديث سياسة الخصوصية: بشكل دوري.",
+        privacyConsentText: "باستخدام لعبتنا، فإنك توافق على سياسة الخصوصية هذه.",
+        agreePrivacyBtn: "موافق",
+        // نصوص شاشة من نحن
+        aboutUsTitle: "من نحن",
+        aboutUsContent_h: `مرحبًا بك في ألعاب عزيز!<br><br>
+                          نحن شركة ناشئة متخصصة في نشر وتوزيع الألعاب، مملوكة للمصمم والمطور عبدالعزيز عبدالله مسعد الشرجي. نهدف إلى تقديم تجارب ألعاب ممتعة ومثيرة للمستخدمين.<br><br>
+                          <h3>مهمتنا:</h3>
+                          - تقديم ألعاب عالية الجودة.<br>
+                          - تحسين تجربة المستخدم.<br>
+                          - الاستماع إلى ملاحظات المستخدمين.<br><br>
+                          <h3>عن المالك:</h3>
+                          - عبدالعزيز عبدالله مسعد الشرجي: مطور ومصمم ألعاب، منشئ محتوى رقمي، ومصمم جرافيكي.<br><br>
+                          <h3>موقعنا:</h3>
+                          - شمال غرب قعطبة - محافظة الضالع - الجمهورية اليمنية.<br><br>
+                          شكرًا لاهتمامك بألعاب عزيز!`,
+        // نصوص شاشة تواصل معنا
+        contactUsTitle: "تواصل معنا",
+        contactIntro: "مرحبًا بك! إذا كان لديك أي استفسارات أو ملاحظات حول لعبتنا نايترو ستروم، يرجى ملء النموذج أدناه:",
+        contactMessagePlaceholder: "اكتب رسالتك هنا...",
+        contactEmailPlaceholder: "أدخل بريدك الإلكتروني...",
+        sendContactBtn: "إرسال",
+        contactConfirmation: "سنكون سعداء بالرد على استفساراتك وسماع ملاحظاتك!"
 
       },
       en: {
@@ -745,21 +1050,17 @@
         coins: ' Coins: ',
         controlButtons: 'Control: Buttons',
         controlRotation: 'Control: Rotation',
-        developerTitle: 'Meet the Developer',
-        devFB: 'Facebook',
-        devIG: 'Instagram',
-        devYT: 'YouTube',
         rankNames: ["Beginner","Professional","Champion","Victor","Conqueror","Master","Prince","Invader","Vanquisher","Leader","Ruler","Sultan","Emperor","King"],
         back: "Back",
-        settingsTitle: "Settings", // Removed icon from here
-        achievementsTitle: "Achievements", // Removed icon from here
-        storeTitle: "Store", // Removed icon from here
+        settingsTitle: "Settings",
+        achievementsTitle: "Achievements",
+        storeTitle: "Store",
         storeCoinCounter: "Coin Balance: ",
         productMagnetName: "Magnet 🧲",
-        productMagnetDesc: "Batch: 20 magnet pieces - Price: 100 coins", // Updated price
+        productMagnetDesc: "Batch: 20 magnet pieces - Price: 100 coins",
         productPrice: "Price: ",
         productQuantity: "Quantity: ",
-        buyButtonText: "Buy", // New translation key for generic buy button
+        buyButtonText: "Buy",
         productProtectionName: "Protection 🛡️",
         productProtectionDesc: "Batch: 10 protection pieces - Price: 50 coins",
         productProtectionPrice: "Price: 50 coins",
@@ -781,7 +1082,54 @@
         startStoreBtn: "Store",
         highestRankLabel: "Highest Rank: ",
         resumeMessage: "Do you want to resume the game using an antibiotic?",
-        resumeGameBtn: "Resume Game"
+        resumeGameBtn: "Resume Game",
+        // Footer Links Texts
+        privacyPolicyLink: "Privacy Policy",
+        aboutUsLink: "About Us",
+        contactUsLink: "Contact Us",
+        // Privacy Policy Popup Texts
+        privacyTitle: "Privacy Policy",
+        privacyIntroTitle: "Introduction",
+        privacyIntroText: "We at Aziz Games care about the privacy of our users. This policy explains how we collect, use, and protect your data in our game Nitro Strom.",
+        privacyDataTitle: "Data We Collect",
+        privacyDataText: `- Email Address: When using the "Contact Us" feature to send messages to the developer.<br>
+                          - User Messages: The messages you send to the developer through the "Contact Us" feature.<br>
+                          - Player Record: Collecting player data for the leaderboard in multiplayer mode.`,
+        privacyUsageTitle: "Data Usage",
+        privacyUsageText: `- Responding to your inquiries: Using your data to reply to your messages.<br>
+                           - Improving user experience: Using your data to enhance the user experience in the game.`,
+        privacyProtectionTitle: "Data Protection",
+        privacyProtectionText: `- Encryption: Protecting your data from unauthorized access.<br>
+                              - Secure Storage: Storing your data on secure servers.`,
+        privacySharingTitle: "Data Sharing",
+        privacySharingText: "- Your data is not shared: with any third party without your consent.",
+        privacyRightsTitle: "User Rights",
+        privacyRightsText: `- Access to Data: Request a copy of your data.<br>
+                            - Deletion of Data: Request the deletion of your data.`,
+        privacyUpdatesTitle: "Updates",
+        privacyUpdatesText: "- We update the privacy policy: periodically.",
+        privacyConsentText: "By using our game, you agree to this privacy policy.",
+        agreePrivacyBtn: "Agree",
+        // About Us Screen Texts
+        aboutUsTitle: "About Us",
+        aboutUsContent_h: `Welcome to Aziz Games!<br><br>
+                          We are a startup specializing in game publishing and distribution, owned by the designer and developer Abdulaziz Abdullah Masaad Al-Sharji. We aim to provide fun and exciting gaming experiences for users.<br><br>
+                          <h3>Our Mission:</h3>
+                          - Deliver high-quality games.<br>
+                          - Enhance user experience.<br>
+                          - Listen to user feedback.<br><br>
+                          <h3>About the Owner:</h3>
+                          - Abdulaziz Abdullah Masaad Al-Sharji: Game developer and designer, digital content creator, and graphic designer.<br><br>
+                          <h3>Our Location:</h3>
+                          - Northwest Qa'atabah - Ad Dali' Governorate - Republic of Yemen.<br><br>
+                          Thank you for your interest in Aziz Games!`,
+        // Contact Us Screen Texts
+        contactUsTitle: "Contact Us",
+        contactIntro: "Welcome! If you have any questions or feedback about our game Nitro Strom, please fill out the form below:",
+        contactMessagePlaceholder: "Type your message here...",
+        contactEmailPlaceholder: "Enter your email...",
+        sendContactBtn: "Send",
+        contactConfirmation: "We'll be happy to answer your questions and hear your feedback!"
       }
     };
     const rankIcons = ["⭐","🏅","🥇","🏆","🎖️","🏵️","👑","🚀","⚡","💼","🔱","👑","🏛️","👑"];
@@ -794,13 +1142,13 @@
       if (savedSettings.language) currentLanguage = savedSettings.language;
       if (typeof savedSettings.soundsEnabled !== "undefined") soundsEnabled = savedSettings.soundsEnabled;
       if (savedSettings.controlMethod) controlMethod = savedSettings.controlMethod;
-      // Set icons for start screen buttons after loading settings (language might affect text)
+      // Set icons for start screen buttons after loading settings
       document.getElementById("settingsBtnIcon").src = generateSettingsIcon();
       document.getElementById("achievementsBtnIcon").src = generateAchievementsIcon();
       document.getElementById("storeBtnIcon").src = generateStoreIcon();
-      updateLanguage();
+      updateLanguage(); // Update all text elements including new ones
     }
-    window.addEventListener("load", loadSettings);
+
     /* ---------------- حفظ رصيد العملات ---------------- */
     let persistentCoins = parseInt(localStorage.getItem("coinBalance") || "0", 10);
     let magnetBatch = parseInt(localStorage.getItem("magnetBatch") || "0", 10);
@@ -824,53 +1172,11 @@
     }
     window.addEventListener("resize", () => {
       resizeCanvas();
-      resizeStartEffects();
       checkDeviceAndOrientation();
       initBuildings();
     });
     resizeCanvas();
-    /* ------------------- إعداد كانفاس تأثيرات البداية ------------------- */
-    const startEffectsCanvas = document.getElementById("startEffectsCanvas");
-    const startEffectsCtx = startEffectsCanvas.getContext("2d");
-    function resizeStartEffects() {
-      startEffectsCanvas.width = window.innerWidth;
-      startEffectsCanvas.height = window.innerHeight;
-    }
-    resizeStartEffects();
-    let particles = [];
-    function initParticles() {
-      particles = [];
-      for (let i = 0; i < 60; i++) {
-        particles.push({
-          x: Math.random() * startEffectsCanvas.width,
-          y: Math.random() * startEffectsCanvas.height,
-          radius: Math.random() * 3 + 2,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2,
-          alpha: Math.random()
-        });
-      }
-    }
-    function updateParticles() {
-      startEffectsCtx.clearRect(0, 0, startEffectsCanvas.width, startEffectsCanvas.height);
-      particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= 0.005;
-        if (p.alpha <= 0) {
-          p.alpha = 1;
-          p.x = Math.random() * startEffectsCanvas.width;
-          p.y = Math.random() * startEffectsCanvas.height;
-        }
-        startEffectsCtx.beginPath(); // Changed from ctx to startEffectsCtx
-        startEffectsCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        startEffectsCtx.fillStyle = "rgba(0,255,255," + p.alpha + ")"; // Changed from ctx to startEffectsCtx
-        startEffectsCtx.fill(); // Changed from ctx to startEffectsCtx
-      });
-      requestAnimationFrame(updateParticles);
-    }
-    initParticles();
-    updateParticles();
+
     /* ------------------ تأثيرات المطر والضباب ------------------ */
     let rainDrops = [];
     const numRainDrops = 100;
@@ -924,7 +1230,7 @@
     /* ------------------ نظام الصوت والموسيقى ------------------ */
     let mainAudioCtx = null;
     function playButtonSound() {
-      if(!mainAudioCtx)return;
+      if(!mainAudioCtx || !soundsEnabled)return; // التحقق من تمكين الصوت
       const osc = mainAudioCtx.createOscillator();
       const gain = mainAudioCtx.createGain();
       osc.type="sine";
@@ -936,12 +1242,14 @@
       osc.stop(mainAudioCtx.currentTime+0.1);
     }
     function vibrateFeedback(duration=50){ if(navigator.vibrate){navigator.vibrate(duration);} }
-    document.querySelectorAll("button").forEach(btn=>{ btn.addEventListener("click", ()=>{ playButtonSound(); vibrateFeedback(); }); });
+    document.querySelectorAll("button, a").forEach(el => { // Apply sound to links too
+         el.addEventListener("click", ()=>{ playButtonSound(); vibrateFeedback(); });
+    });
     const MusicManager = {
       currentOscillators: [],
       currentScreen: null,
       playSequence(seq) {
-        if(!mainAudioCtx)return;
+        if(!mainAudioCtx || !soundsEnabled)return; // التحقق من تمكين الصوت
         let now = mainAudioCtx.currentTime;
         this.stopMusic();
         seq.forEach(note=>{
@@ -1016,22 +1324,28 @@
       initialized: false,
       init() {
         if(this.initialized)return;
-        mainAudioCtx = mainAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        this.audioCtx=mainAudioCtx;
-        this.masterGain = this.audioCtx.createGain();
-        this.masterGain.gain.value = soundsEnabled?0.5:0;
-        this.engineGain = this.audioCtx.createGain();
-        this.engineGain.gain.value = this.baseEngineGain;
-        this.engineOsc = this.audioCtx.createOscillator();
-        this.engineOsc.type="sine";
-        this.engineOsc.frequency.value = 60;
-        this.engineOsc.connect(this.engineGain);
-        this.engineGain.connect(this.masterGain);
-        this.masterGain.connect(this.audioCtx.destination);
-        this.engineOsc.start();
-        this.initialized = true;
+        try { // التعامل مع أي أخطاء في إنشاء AudioContext
+           mainAudioCtx = mainAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+           this.audioCtx=mainAudioCtx;
+           this.masterGain = this.audioCtx.createGain();
+           this.masterGain.gain.value = soundsEnabled?0.5:0; // تطبيق إعداد الصوت الأولي
+           this.engineGain = this.audioCtx.createGain();
+           this.engineGain.gain.value = this.baseEngineGain;
+           this.engineOsc = this.audioCtx.createOscillator();
+           this.engineOsc.type="sine";
+           this.engineOsc.frequency.value = 60;
+           this.engineOsc.connect(this.engineGain);
+           this.engineGain.connect(this.masterGain);
+           this.masterGain.connect(this.audioCtx.destination);
+           this.engineOsc.start();
+           this.initialized = true;
+        } catch(e) {
+           console.error("Failed to initialize AudioContext:", e);
+           soundsEnabled = false; // تعطيل الصوت إذا فشل التهيئة
+        }
       },
       updateEngineSound(speed) {
+        if(!this.initialized || !soundsEnabled) return;
         let gear = speed<10?1: speed<12?2: speed<14?3:4;
         let freq = 60*gear*(speed/initialSpeed)*(1+(Math.random()-0.5)*0.1);
         this.engineOsc.frequency.setTargetAtTime(freq, this.audioCtx.currentTime, 0.1);
@@ -1040,6 +1354,7 @@
         this.engineGain.gain.setTargetAtTime(gain, this.audioCtx.currentTime, 0.1);
       },
       playCoinSound() {
+        if(!this.initialized || !soundsEnabled) return;
         let osc = this.audioCtx.createOscillator();
         const gain = this.audioCtx.createGain();
         osc.type="triangle";
@@ -1050,6 +1365,7 @@
         osc.stop(this.audioCtx.currentTime+0.3);
       },
       playCrash() {
+         if(!this.initialized || !soundsEnabled) return;
         const dur = 0.2;
         const buf = this.audioCtx.createBuffer(1, this.audioCtx.sampleRate*dur, this.audioCtx.sampleRate);
         const data = buf.getChannelData(0);
@@ -1067,6 +1383,7 @@
         noise.stop(this.audioCtx.currentTime+dur);
       },
       playBulletSound() {
+        if(!this.initialized || !soundsEnabled) return;
         let osc = this.audioCtx.createOscillator();
         const gain = this.audioCtx.createGain();
         osc.type="square";
@@ -1078,6 +1395,7 @@
         osc.stop(mainAudioCtx.currentTime+0.1);
       },
       playExplosionSound() {
+         if(!this.initialized || !soundsEnabled) return;
         let osc = this.audioCtx.createOscillator();
         const gain = this.audioCtx.createGain();
         osc.type="sawtooth";
@@ -1088,6 +1406,20 @@
         osc.start();
         osc.stop(mainAudioCtx.currentTime+0.3);
       },
+      playSuccessSound() { // صوت لتأكيد الإرسال
+         if(!this.initialized || !soundsEnabled) return;
+         const osc = this.audioCtx.createOscillator();
+         const gain = this.audioCtx.createGain();
+         osc.type = 'triangle';
+         osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+         osc.frequency.exponentialRampToValueAtTime(880, this.audioCtx.currentTime + 0.1);
+         gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+         gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+         osc.connect(gain);
+         gain.connect(this.masterGain);
+         osc.start();
+         osc.stop(this.audioCtx.currentTime + 0.3);
+      },
       stopAll() {
         if(this.masterGain){
           this.masterGain.gain.setTargetAtTime(0, this.audioCtx.currentTime, 0.1);
@@ -1096,7 +1428,7 @@
     };
     /* ----------------- أصوات التحكم ----------------- */
     function playCarControlSound(){
-      if(!mainAudioCtx)return;
+      if(!mainAudioCtx || !soundsEnabled)return;
       let osc = mainAudioCtx.createOscillator();
       const gain = mainAudioCtx.createGain();
       osc.type="sine";
@@ -1126,6 +1458,8 @@
     /* -------------------- الترجمة وتحديثها -------------------- */
     function updateLanguage(){
       const d = translations[currentLanguage];
+      document.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr'; // Update page direction
+
       document.getElementById("startMessage").textContent = d.startMessage;
       document.getElementById("startBtn").textContent = d.startBtn;
       document.getElementById("restartBtn").textContent = d.restartBtn;
@@ -1133,10 +1467,7 @@
       document.getElementById("langToggleBtn").textContent = d.langBtn;
       document.getElementById("soundToggleBtn").textContent = soundsEnabled ? d.soundOn : d.soundOff;
       document.getElementById("controlMethodBtn").textContent = controlMethod==="buttons" ? d.controlButtons : d.controlRotation;
-      document.getElementById("developerTitle").textContent = d.developerTitle;
-      document.getElementById("devFB").textContent = d.devFB;
-      document.getElementById("devIG").textContent = d.devIG;
-      document.getElementById("devYT").textContent = d.devYT;
+
       document.getElementById("settingsTitle").textContent = d.settingsTitle;
       document.getElementById("achievementsTitle").textContent = d.achievementsTitle;
       document.getElementById("storeTitle").textContent = d.storeTitle;
@@ -1144,11 +1475,10 @@
 
       // Magnet Product
       document.querySelector(".productName").textContent = d.productMagnetName;
-      document.querySelector(".productDesc").textContent = d.productMagnetDesc; // Updated to reflect new price
+      document.querySelector(".productDesc").textContent = d.productMagnetDesc;
       document.querySelector(".productPrice").textContent = d.productPrice + "100 " + (currentLanguage==="ar"?"عملة":"coins");
       document.querySelector(".productQuantity").textContent = d.productQuantity + magnetBatch;
       document.getElementById("buyMagnetBtn").textContent = d.buyButtonText;
-
 
       // Protection Product
       document.querySelector(".protectionProductName").textContent = d.productProtectionName;
@@ -1156,7 +1486,6 @@
       document.querySelector(".protectionProductPrice").textContent = d.productProtectionPrice;
       document.querySelector(".protectionProductQuantity").textContent = d.productQuantity + protectionBatch;
       document.getElementById("buyProtectionBtn").textContent = d.buyButtonText;
-
 
       // Points Boost Product
       document.querySelector(".pointsBoostProductName").textContent = d.productPointsBoostName;
@@ -1179,7 +1508,6 @@
       document.querySelector(".superSpeedProductQuantity").textContent = d.productQuantity + superSpeedBatch;
       document.getElementById("buySuperSpeedBtn").textContent = d.buyButtonText;
 
-
       document.getElementById("settingsBtnText").textContent = " " + d.startSettingsBtn;
       document.getElementById("achievementsBtnText").textContent = " " + d.startAchievementsBtn;
       document.getElementById("storeBtnText").textContent = " " + d.startStoreBtn;
@@ -1189,11 +1517,55 @@
 
       document.querySelector("#resumeOverlay .resume-message").textContent = d.resumeMessage;
       document.getElementById("resumeGameBtn").textContent = d.resumeGameBtn;
+
+      // Update Footer Links
+      document.getElementById("privacyPolicyLink").textContent = d.privacyPolicyLink;
+      document.getElementById("aboutUsLink").textContent = d.aboutUsLink;
+      document.getElementById("contactUsLink").textContent = d.contactUsLink;
+
+      // Update Privacy Policy Popup
+      document.getElementById("privacyTitle").textContent = d.privacyTitle;
+      document.getElementById("privacyIntroTitle").textContent = d.privacyIntroTitle;
+      document.getElementById("privacyIntroText").textContent = d.privacyIntroText;
+      document.getElementById("privacyDataTitle").textContent = d.privacyDataTitle;
+      document.getElementById("privacyDataText").innerHTML = d.privacyDataText; // Use innerHTML for <br>
+      document.getElementById("privacyUsageTitle").textContent = d.privacyUsageTitle;
+      document.getElementById("privacyUsageText").innerHTML = d.privacyUsageText; // Use innerHTML for <br>
+      document.getElementById("privacyProtectionTitle").textContent = d.privacyProtectionTitle;
+      document.getElementById("privacyProtectionText").innerHTML = d.privacyProtectionText; // Use innerHTML for <br>
+      document.getElementById("privacySharingTitle").textContent = d.privacySharingTitle;
+      document.getElementById("privacySharingText").textContent = d.privacySharingText;
+      document.getElementById("privacyRightsTitle").textContent = d.privacyRightsTitle;
+      document.getElementById("privacyRightsText").innerHTML = d.privacyRightsText; // Use innerHTML for <br>
+      document.getElementById("privacyUpdatesTitle").textContent = d.privacyUpdatesTitle;
+      document.getElementById("privacyUpdatesText").textContent = d.privacyUpdatesText;
+      document.getElementById("privacyConsentText").textContent = d.privacyConsentText;
+      document.getElementById("agreePrivacyBtn").textContent = d.agreePrivacyBtn;
+
+      // Update About Us Screen
+      document.getElementById("aboutUsTitle").textContent = d.aboutUsTitle;
+      document.getElementById("aboutUsContent").innerHTML = d.aboutUsContent_h; // Use innerHTML for complex structure
+
+      // Update Contact Us Screen
+      document.getElementById("contactUsTitle").textContent = d.contactUsTitle;
+      document.getElementById("contactIntro").textContent = d.contactIntro;
+      document.getElementById("contactMessage").placeholder = d.contactMessagePlaceholder;
+      document.getElementById("contactEmail").placeholder = d.contactEmailPlaceholder;
+      document.getElementById("sendContactBtn").textContent = d.sendContactBtn;
+      document.getElementById("contactConfirmationPopup").textContent = d.contactConfirmation;
+
+       // تحديث محاذاة النص في سياسة الخصوصية
+       document.getElementById("privacyPolicyContent").style.textAlign = currentLanguage === 'ar' ? 'right' : 'left';
+
+
+       // تحديث لوحة المعلومات إذا كانت اللعبة قد بدأت
+       if (typeof updateDashboard === 'function' && !gameOver) {
+           updateDashboard();
+       }
     }
     function toggleLanguage(){
       currentLanguage = currentLanguage==="ar"?"en":"ar";
       updateLanguage();
-      updateDashboard();
       saveSettings();
     }
     document.getElementById("langToggleBtn").addEventListener("click", toggleLanguage);
@@ -1208,6 +1580,10 @@
       soundsEnabled = !soundsEnabled;
       if(AudioManager.masterGain) AudioManager.masterGain.gain.value = soundsEnabled?0.5:0;
       document.getElementById("soundToggleBtn").textContent = soundsEnabled ? translations[currentLanguage].soundOn : translations[currentLanguage].soundOff;
+      if (!soundsEnabled) { // إيقاف الموسيقى الحالية إذا تم تعطيل الصوت
+           MusicManager.stopLoop();
+           AudioManager.stopAll();
+      }
       saveSettings();
     }
     document.getElementById("soundToggleBtn").addEventListener("click", toggleSound);
@@ -1215,8 +1591,10 @@
       if(document.hidden){
         AudioManager.stopAll();
         MusicManager.stopLoop();
-      } else if(AudioManager.masterGain){
-        AudioManager.masterGain.gain.value = soundsEnabled?0.5:0;
+      } else if(AudioManager.masterGain && soundsEnabled){ // استئناف الصوت فقط إذا كان ممكناً
+        AudioManager.masterGain.gain.value = 0.5;
+        // يمكنك إعادة تشغيل الموسيقى هنا إذا أردت، بناءً على الشاشة الحالية
+        // MusicManager.startLoop(MusicManager.currentScreen);
       }
     });
     /* -------------------- فيزياء اللعبة -------------------- */
@@ -1510,7 +1888,7 @@
     }
     /* --------------------- نظام المغناطيس --------------------- */
     let nextMagnetSpawnDistance = 1100;
-    let magnetActive = false, magnetEffectTimeLeft = 50; // Corrected: magnetEffectTimeLeft was 50 before, now it's correct.
+    let magnetActive = false, magnetEffectTimeLeft = 50;
     class MagnetPiece {
       constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
       update(dt){ this.y += globalCurrentSpeed*0.5; this.rotation+= dt*2; }
@@ -1535,9 +1913,9 @@
     const magnetPieces = [];
     /* --------------------- نظام الحماية --------------------- */
     let nextProtectionSpawnDistance = 1500;
-    let protectionActive = false, protectionTimeLeft = 0; // This is the duration for the protection shield effect
-    const protectionPieces = []; // Array to hold protection pieces on screen
-    class ProtectionPiece { // Class for the protection pickup item
+    let protectionActive = false, protectionTimeLeft = 0;
+    const protectionPieces = [];
+    class ProtectionPiece {
       constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
       update(dt){ this.y += globalCurrentSpeed*0.5; this.rotation += dt*2; }
       draw(){
@@ -1560,8 +1938,8 @@
     }
     /* --------------------- نظام تعزيز النقاط --------------------- */
     let nextPointsBoostSpawnDistance = 2300;
-    const pointsBoostPieces = []; // Array to hold points boost pieces on screen
-    class PointsBoostPiece { // Class for the points boost pickup item
+    const pointsBoostPieces = [];
+    class PointsBoostPiece {
       constructor(x,y){ this.x=x; this.y=y; this.size = 25*scaleFactor; this.rotation=0; }
       update(dt){ this.y += globalCurrentSpeed*0.5; this.rotation += dt*2; }
       draw(){
@@ -1673,10 +2051,6 @@
           break;
         }
       }
-      if(currentRank!==highestRank){
-        highestRank = currentRank;
-        localStorage.setItem("highestRank", highestRank);
-      }
       return { name_ar: currentRank, name_en: currentRank, icon: icon };
     }
     function updateDashboard(){
@@ -1687,7 +2061,7 @@
       document.getElementById("distanceBoard").textContent = d.distance + (distance/1000).toFixed(2) + distUnit;
       document.getElementById("scoreBoard").textContent = d.score + score;
       document.getElementById("coinCounter").textContent = d.coins + persistentCoins;
-      document.getElementById("storeCoinCounter").textContent = d.storeCoinCounter + persistentCoins;
+      document.getElementById("storeCoinCounter").textContent = d.storeCoinCounter + persistentCoins; // تحديث رصيد المتجر أيضاً
       const btn = document.getElementById("shieldBtn");
       btn.style.opacity = (persistentCoins>=8 && !shieldActive)?"1":"0.3";
       btn.style.filter = persistentCoins<8?"brightness(1.2)":"none";
@@ -1708,18 +2082,18 @@
         document.querySelector("#shieldMeter div").style.width = "0%";
       }
       if(magnetActive){
-        const mProg = 100*(magnetEffectTimeLeft/50); // magnetEffectTimeLeft is 50
+        const mProg = 100*(magnetEffectTimeLeft/50);
         document.querySelector("#magnetMeter div").style.width = mProg+"%";
       } else {
         document.querySelector("#magnetMeter div").style.width = "0%";
       }
       if(protectionActive){
-        const pProg = 100*(protectionTimeLeft/15); // protectionTimeLeft is 15
+        const pProg = 100*(protectionTimeLeft/15);
         document.querySelector("#protectionMeter div").style.width = pProg+"%";
       } else {
         document.querySelector("#protectionMeter div").style.width = "0%";
       }
-      // Update quantities in store view (even if not visible, keeps data consistent)
+      // تحديث كميات المتجر (مهمة حتى لو لم تكن الشاشة مرئية)
       document.querySelector(".productQuantity").textContent = d.productQuantity + magnetBatch;
       document.querySelector(".protectionProductQuantity").textContent = d.productQuantity + protectionBatch;
       document.querySelector(".pointsBoostProductQuantity").textContent = d.productQuantity + pointsBoostBatch;
@@ -1736,12 +2110,25 @@
       const currDist = (distance/1000).toFixed(2);
       let bestScore = localStorage.getItem("bestScore")||0;
       let bestDist = localStorage.getItem("bestDistance")||0;
-      if(currScore>bestScore){ bestScore=currScore; localStorage.setItem("bestScore", bestScore); }
-      if(currDist>bestDist){ bestDist=currDist; localStorage.setItem("bestDistance", bestDist); }
-      document.getElementById("featuredScore").innerHTML = "<strong>" + (currentLanguage==="ar"?"أفضل نتيجة مميزة: ":"Best Score: ") + bestScore + "</strong>";
+      let highestRankAchieved = localStorage.getItem("highestRank") || (currentLanguage === "ar" ? "غير محددة" : "Not set"); // تحميل أعلى رتبة محفوظة
+
+      if(currScore > bestScore){ bestScore = currScore; localStorage.setItem("bestScore", bestScore); }
+      if(parseFloat(currDist) > parseFloat(bestDist)){ bestDist = currDist; localStorage.setItem("bestDistance", bestDist); } // التأكد من المقارنة كأرقام
+
+      // الحصول على الرتبة الحالية وتحديث الأعلى إذا لزم الأمر
+      const currentRankInfo = getPlayerRank(currScore);
+      const currentRankName = currentLanguage==="ar" ? currentRankInfo.name_ar : currentRankInfo.name_en;
+      const rankNamesList = translations[currentLanguage].rankNames;
+      // مقارنة الرتب بناءً على موقعها في القائمة
+      if (rankNamesList.indexOf(currentRankName) > rankNamesList.indexOf(highestRankAchieved)) {
+          highestRankAchieved = currentRankName;
+          localStorage.setItem("highestRank", highestRankAchieved);
+      }
+
+      document.getElementById("featuredScore").innerHTML = "<strong>" + (currentLanguage==="ar"?"أفضل نتيجة: ":"Best Score: ") + bestScore + "</strong>";
       document.getElementById("achievementsText").innerHTML = d.score+currScore+"<br>"+d.distance+currDist+distUnit;
-      const rank = getPlayerRank(score);
-      document.getElementById("playerRank").textContent = (currentLanguage==="ar"?"رتبتك: ":"Your Rank: ") + rank.icon + " " + (currentLanguage==="ar"?rank.name_ar:rank.name_en);
+      document.getElementById("playerRank").textContent = (currentLanguage==="ar"?"رتبتك: ":"Your Rank: ") + currentRankInfo.icon + " " + currentRankName;
+      document.getElementById("highestRankDisplay").textContent = d.highestRankLabel + highestRankAchieved; // تحديث عرض أعلى رتبة في شاشة الإنجازات
       document.getElementById("gameOverOverlay").style.display = "flex";
     }
 
@@ -1751,10 +2138,10 @@
             document.getElementById("resumeOverlay").style.display = "flex";
             resumeTimer = setTimeout(() => {
                 hideResumeOverlay();
-                showGameOver();
-            }, 5000);
+                showGameOver(); // إظهار شاشة النهاية إذا لم يستجب
+            }, 5000); // 5 ثواني للاستجابة
         } else {
-            showGameOver();
+            showGameOver(); // إظهار شاشة النهاية مباشرة إذا لا يوجد مضاد حيوي
         }
     }
 
@@ -1767,25 +2154,27 @@
         if (antibioticBatch > 0) {
             antibioticBatch--;
             localStorage.setItem("antibioticBatch", antibioticBatch);
-            updateDashboard(); // Update dashboard after using antibiotic
-            updateLanguage(); // Update store quantities if language affects them
+            updateDashboard(); // تحديث لوحة المعلومات
+            updateLanguage(); // تحديث نصوص وكميات المتجر
             hideResumeOverlay();
             gameOver = false;
-            enemyCars = []; // Clear current enemies
-            // Make player invincible for a short period
+            // إعادة تعيين الأعداء وإعطاء حماية مؤقتة
+            enemyCars = [];
             protectionActive = true;
-            protectionTimeLeft = 3; // 3 seconds of invincibility after resuming
+            protectionTimeLeft = 3; // 3 ثواني حماية
 
+            // استئناف حلقة اللعبة بعد تأخير بسيط
             setTimeout(() => {
                 lastTime = performance.now();
                 requestAnimationFrame(gameLoop);
+                // إعادة ظهور الأعداء بعد فترة
                 setTimeout(() => {
-                    for(let i=0;i<3;i++) createEnemyCar(); // Re-introduce enemy cars
-                }, 3000); // Re-spawn enemies after 3 seconds
+                    for(let i=0;i<3;i++) createEnemyCar();
+                }, 3000);
             }, 100);
         } else {
-            hideResumeOverlay();
-            showGameOver();
+            hideResumeOverlay(); // إخفاء النافذة حتى لو لم يكن هناك مضاد حيوي (نظرياً لن تظهر)
+            showGameOver(); // إظهار شاشة النهاية
         }
     }
     document.getElementById("resumeGameBtn").addEventListener("click", resumeGame);
@@ -1801,9 +2190,9 @@
       shieldActive=false;
       shieldTimeLeft=0;
       magnetActive=false;
-      magnetEffectTimeLeft=50; // Reset magnet duration
+      magnetEffectTimeLeft=50;
       protectionActive=false;
-      protectionTimeLeft=0; // Reset protection duration
+      protectionTimeLeft=0;
       superSpeedActive = false;
       superSpeedTimeLeft = 0;
       playerCar.x = window.innerWidth/2 -20*scaleFactor;
@@ -1820,52 +2209,50 @@
       nextPointsBoostSpawnDistance = 2300;
       for(let i=1;i<3;i++) createEnemyCar();
       updateDashboard();
-      updateLanguage(); // To update store item quantities after reset if needed
+      updateLanguage();
     }
     document.getElementById("restartBtn").addEventListener("click", ()=>{
       resetGame();
       document.getElementById("gameOverOverlay").style.display = "none";
       document.getElementById("startOverlay").style.display = "flex";
-      MusicManager.stopLoop();
-      MusicManager.startLoop("start");
+      MusicManager.stopLoop(); // إيقاف موسيقى النهاية
+      MusicManager.startLoop("start"); // بدء موسيقى البداية
     });
     /* --------------------- شاشة الانتظار --------------------- */
     function showWaitingScreen(){
-      calibratedTilt = tilt;
+      calibratedTilt = tilt; // معايرة الميل عند بدء الانتظار
       document.getElementById("startOverlay").style.display="none";
       document.getElementById("waitingOverlay").style.display="flex";
-      MusicManager.stopLoop();
-      MusicManager.startLoop("waiting");
-      const bar = document.querySelector(".progress-bar");
-      bar.style.animation = "none";
-      void bar.offsetWidth;
-      bar.style.animation = "progressFill 5s linear forwards";
+      MusicManager.stopLoop(); // إيقاف موسيقى البداية
+      MusicManager.startLoop("waiting"); // بدء موسيقى الانتظار
+      const bar = document.querySelector("#waitingOverlay .progress-bar"); // تحديد شريط الانتظار بدقة
+      bar.style.animation = "none"; // إعادة تعيين التحريك
+      void bar.offsetWidth; // إعادة تدفق DOM
+      bar.style.animation = "progressFill 5s linear forwards"; // تشغيل تحريك 5 ثوان
       setTimeout(()=>{
         document.getElementById("waitingOverlay").style.display="none";
-        MusicManager.stopLoop();
-        if(AudioManager.masterGain) AudioManager.masterGain.gain.value = soundsEnabled?0.5:0;
+        MusicManager.stopLoop(); // إيقاف موسيقى الانتظار
+        // تهيئة الصوت إذا لم يكن قد تم بالفعل (قد يكون مطلوباً بسبب تفاعل المستخدم)
+        if(!AudioManager.initialized) AudioManager.init();
+        if(AudioManager.audioCtx && AudioManager.audioCtx.state === "suspended") {
+           AudioManager.audioCtx.resume();
+        }
+        if(AudioManager.masterGain) AudioManager.masterGain.gain.value = soundsEnabled?0.5:0; // التأكد من حالة الصوت
         lastTime = performance.now();
-        requestAnimationFrame(gameLoop);
-      },5000);
+        requestAnimationFrame(gameLoop); // بدء حلقة اللعبة
+      },5000); // مدة شاشة الانتظار 5 ثوان
     }
-    function openExternalLink(url){
-      if(navigator.onLine) window.open(url, "_blank");
-      else alert(currentLanguage==="ar"?"أنت غير متصل":"You are offline");
-    }
-    document.getElementById("devFB").addEventListener("click", ()=>openExternalLink("https://www.facebook.com/yourpage"));
-    document.getElementById("devIG").addEventListener("click", ()=>openExternalLink("https://www.instagram.com/yourprofile"));
-    document.getElementById("devYT").addEventListener("click", ()=>openExternalLink("https://www.youtube.com/yourchannel"));
-    /* --------------------- نظام الدرع اليدوي (المغناطيس) --------------------- */
-    let shieldActive = false, shieldTimeLeft = 0; // shieldActive is for manual shield (costs coins)
+    /* --------------------- نظام الدرع اليدوي --------------------- */
+    let shieldActive = false, shieldTimeLeft = 0;
     document.getElementById("shieldBtn").addEventListener("click", ()=>{
-      if(persistentCoins>=8 && !shieldActive){ // Cost is 8 coins
+      if(persistentCoins>=8 && !shieldActive){
         shieldActive = true;
-        shieldTimeLeft = 30; // Duration 30 seconds
+        shieldTimeLeft = 30;
         persistentCoins-=8;
         localStorage.setItem("coinBalance", persistentCoins);
         console.log("Manual Shield activated");
         const b = document.getElementById("shieldBtn");
-        b.style.background = "linear-gradient(145deg, #ff69b4, #ff1493)"; // Visual feedback
+        b.style.background = "linear-gradient(145deg, #ff69b4, #ff1493)";
         b.style.borderColor = "#ff69b4";
         gsap.fromTo("#shieldBtn",{scale:1.2},{scale:1,duration:0.3});
         updateDashboard();
@@ -1876,43 +2263,43 @@
         if(superSpeedBatch > 0 && !superSpeedActive){
             superSpeedActive = true;
             originalCurrentSpeed = globalCurrentSpeed;
-            globalCurrentSpeed = 100;
+            globalCurrentSpeed = 100; // سرعة فائقة
             superSpeedBatch--;
             localStorage.setItem("superSpeedBatch", superSpeedBatch);
             console.log("Super Speed activated");
-            enemyCars = []; // Clear enemies
-            superSpeedTimeLeft = 10; // CHANGED: Duration is now 10 seconds
+            enemyCars = []; // إزالة الأعداء
+            superSpeedTimeLeft = 10; // مدة 10 ثوان
             const superSpeedTimer = setInterval(() => {
                 superSpeedTimeLeft -= 1;
                 if (superSpeedTimeLeft <= 0) {
                     clearInterval(superSpeedTimer);
                     superSpeedActive = false;
-                    globalCurrentSpeed = originalCurrentSpeed;
+                    globalCurrentSpeed = originalCurrentSpeed; // العودة للسرعة الأصلية
                     console.log("Super Speed ended");
+                    // إعادة ظهور الأعداء بعد فترة
                     setTimeout(() => {
                          for(let i=0;i<3;i++) createEnemyCar();
-                    }, 3000); // Re-spawn enemies after a delay
+                    }, 3000);
                 }
-                 updateDashboard();
+                 updateDashboard(); // تحديث مستمر للعدادات
             }, 1000);
             updateDashboard();
-            updateLanguage(); // Update store quantities
+            updateLanguage(); // تحديث كمية المتجر
         }
     });
-    /* --------------------- نظام شراء المغناطيس --------------------- */
-    document.getElementById("buyMagnetBtn").addEventListener("click", ()=>{ // Changed to use ID
-      if(persistentCoins>=100){ // CHANGED: Price is now 100
+    /* --------------------- أنظمة الشراء من المتجر --------------------- */
+    document.getElementById("buyMagnetBtn").addEventListener("click", ()=>{
+      if(persistentCoins>=100){
         persistentCoins-=100;
         magnetBatch +=20;
         localStorage.setItem("coinBalance", persistentCoins);
         localStorage.setItem("magnetBatch", magnetBatch);
-        updateLanguage(); // To update the displayed quantity and price text
-        updateDashboard(); // To update coin counter
+        updateLanguage();
+        updateDashboard(); // تحديث عداد العملات في اللوحة الرئيسية أيضاً
         alert(currentLanguage==="ar"?"تم شراء دفعة مغناطيس!":"Magnet batch purchased!");
       } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
     });
-    /* --------------------- نظام شراء الحماية --------------------- */
-    document.getElementById("buyProtectionBtn").addEventListener("click", ()=>{ // Changed to use ID
+    document.getElementById("buyProtectionBtn").addEventListener("click", ()=>{
       if(persistentCoins>=50){
         persistentCoins-=50;
         protectionBatch +=10;
@@ -1923,8 +2310,7 @@
         alert(currentLanguage==="ar"?"تم شراء دفعة حماية!":"Protection batch purchased!");
       } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
     });
-    /* --------------------- نظام شراء تعزيز النقاط --------------------- */
-    document.getElementById("buyPointsBoostBtn").addEventListener("click", ()=>{ // Changed to use ID
+    document.getElementById("buyPointsBoostBtn").addEventListener("click", ()=>{
       if(persistentCoins>=100){
         persistentCoins-=100;
         pointsBoostBatch +=3;
@@ -1935,8 +2321,7 @@
         alert(currentLanguage==="ar"?"تم شراء دفعة تعزيز النقاط!":"Points boost batch purchased!");
       } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
     });
-     /* --------------------- نظام شراء المضاد الحيوي --------------------- */
-    document.getElementById("buyAntibioticBtn").addEventListener("click", ()=>{ // Changed to use ID
+    document.getElementById("buyAntibioticBtn").addEventListener("click", ()=>{
         if(persistentCoins>=100){
             persistentCoins-=100;
             antibioticBatch +=3;
@@ -1947,8 +2332,7 @@
             alert(currentLanguage==="ar"?"تم شراء دفعة مضاد حيوي!":"Antibiotic batch purchased!");
         } else { alert(currentLanguage==="ar"?"رصيد غير كافٍ":"Not enough coins"); }
     });
-     /* --------------------- نظام شراء التسريع الفائق --------------------- */
-    document.getElementById("buySuperSpeedBtn").addEventListener("click", ()=>{ // Changed to use ID
+    document.getElementById("buySuperSpeedBtn").addEventListener("click", ()=>{
         if(persistentCoins>=100){
             persistentCoins-=100;
             superSpeedBatch +=5;
@@ -1976,8 +2360,8 @@
             AudioManager.playExplosionSound();
             vibrateFeedback(50);
             explosions.push(new Explosion(ec.x+ec.width/2, ec.y+ec.height/2));
-            if (!superSpeedActive) createEnemyCar();
-            break;
+            if (!superSpeedActive) createEnemyCar(); // إعادة إنشاء عدو فقط إذا لم يكن في وضع السرعة الفائقة
+            break; // الخروج من حلقة الأعداء بعد إصابة واحد
           }
         }
       }
@@ -1990,47 +2374,64 @@
       }
     }
     function drawExplosions(){ explosions.forEach(exp=>exp.draw()); }
-    /* --------------------- تحديث قطع الحماية --------------------- */
+    /* --------------------- تحديث قطع القدرات --------------------- */
     function updateProtectionPieces(dt){
       for(let i=protectionPieces.length-1;i>=0;i--){
-        const pp = protectionPieces[i]; // Renamed sp to pp for clarity (Protection Piece)
+        const pp = protectionPieces[i];
         pp.update(dt);
-        // Check collision with player
         if(detectCollision(playerCar, {x: pp.x, y: pp.y, width: pp.size, height: pp.size})){
-          if(protectionBatch > 0 && !protectionActive){ // Only activate if not already active and has batch
+          if(!protectionActive){ // تفعيل فقط إذا لم تكن نشطة بالفعل
             protectionActive = true;
-            protectionTimeLeft = 15; // Duration of protection shield in seconds
-            protectionBatch--; // Decrement from owned batch
-            localStorage.setItem("protectionBatch", protectionBatch);
+            protectionTimeLeft = 15;
+             // لا يتم خصم الدفعة هنا، تم خصمها عند الشراء/الحصول عليها
             console.log("Protection Shield Activated from pickup!");
           }
-          protectionPieces.splice(i,1); // Remove piece from game
-          updateDashboard();
-          updateLanguage(); // Update store quantities
+          protectionPieces.splice(i,1);
+          updateDashboard(); // تحديث الشريط
         } else if(pp.y>window.innerHeight){
-          protectionPieces.splice(i,1); // Remove if off-screen
+          protectionPieces.splice(i,1);
         }
       }
     }
-    /* --------------------- تحديث قطع تعزيز النقاط --------------------- */
     function updatePointsBoostPieces(dt){
       for(let i=pointsBoostPieces.length-1;i>=0;i--){
         const pb = pointsBoostPieces[i];
         pb.update(dt);
         if(detectCollision(playerCar, {x: pb.x, y: pb.y, width: pb.size, height: pb.size})){
-          score += 130; // Add 130 points
-          // No need to decrement pointsBoostBatch here, it's decremented when spawning the piece.
-          // This was a misunderstanding. The batch is for spawning them. Once spawned, picking it up gives points.
-          // If you want to make it a consumable that you *use* from inventory to get points, that's a different logic.
-          // The current logic: buy a batch, they spawn if you have them, pick up to get points.
+          score += 130; // إضافة النقاط
           console.log("Points Boost collected! +130 points");
           pointsBoostPieces.splice(i,1);
-          updateDashboard(); // Update score display
+          updateDashboard(); // تحديث عرض النقاط
         } else if(pb.y>window.innerHeight){
           pointsBoostPieces.splice(i,1);
         }
       }
     }
+    function updateMagnetPieces(dt){ // دالة منفصلة لتحديث المغناطيس
+        for(let i=magnetPieces.length-1;i>=0;i--){
+            const mp = magnetPieces[i];
+            if(magnetActive){ // سحب القطع إذا كان المغناطيس نشطاً
+                const targetX = playerCar.x+playerCar.width/2;
+                const targetY = playerCar.y+playerCar.height/2;
+                mp.x += (targetX-mp.x)*0.1;
+                mp.y += (targetY-mp.y)*0.1;
+            } else { mp.update(dt); } // حركة عادية
+
+            if(detectCollision(playerCar, {x: mp.x, y: mp.y, width: mp.size, height: mp.size})){
+                if(!magnetActive){ // تفعيل المغناطيس عند الالتقاط فقط إذا لم يكن نشطاً
+                    magnetActive = true;
+                    magnetEffectTimeLeft = 50;
+                     // لا يتم خصم الدفعة هنا
+                    console.log("Magnet Activated from pickup!");
+                }
+                magnetPieces.splice(i,1);
+                updateDashboard(); // تحديث شريط المغناطيس
+            } else if(mp.y>window.innerHeight){
+                magnetPieces.splice(i,1);
+            }
+        }
+    }
+
     /* --------------------- تحديث شعار اللعبة --------------------- */
     const gameLogoTexts = ["نايترو ستروم", "NITRO STROM", "نايترو ستروم"];
     let logoIndex = 0;
@@ -2041,7 +2442,7 @@
     setInterval(updateGameLogo,2000);
     /* --------------------- الحلقة الرئيسية --------------------- */
     function gameLoop(currentTime){
-      if(gameOver && document.getElementById("resumeOverlay").style.display !== "flex") return; // Pause if game over and not showing resume
+      if(gameOver && document.getElementById("resumeOverlay").style.display !== "flex") return;
 
       const dt = (currentTime - lastTime)/1000;
       lastTime = currentTime;
@@ -2053,6 +2454,7 @@
       if(laneMarkerY>laneMarkerHeight+laneMarkerGap) laneMarkerY = 0;
       flameTimer++;
       playerCar.updatePhysics();
+      // حدود الطريق
       if(playerCar.x < roadX+5*scaleFactor){
         playerCar.x = roadX+5*scaleFactor;
         playerCar.vx = 0;
@@ -2063,61 +2465,62 @@
       }
       playerCar.updateWheels();
 
-      // Manual Shield (purchased with coins)
+      // تحديث مؤقتات القدرات
       if(shieldActive){
         shieldTimeLeft -= dt;
-        trySpawnBullet(currentTime/1000); // Allow shooting with manual shield
+        trySpawnBullet(currentTime/1000);
         if(shieldTimeLeft<=0){
           shieldActive = false;
           const btn = document.getElementById("shieldBtn");
-          btn.style.background = "linear-gradient(145deg, #00ffff, #004d4d)"; // Reset button style
+          btn.style.background = "linear-gradient(145deg, #00ffff, #004d4d)";
           btn.style.borderColor = "#0ff";
           console.log("Manual Shield expired");
         }
       }
-      // Magnet (picked up)
       if(magnetActive){
         magnetEffectTimeLeft -= dt;
         if(magnetEffectTimeLeft<=0){ magnetActive = false; }
       }
-      // Protection Shield (picked up)
       if(protectionActive){
         protectionTimeLeft -= dt;
         if(protectionTimeLeft<=0){ protectionActive = false; }
       }
 
-
+      // تحديث الأعداء والتحقق من الاصطدام
       if (!superSpeedActive) {
           enemyCars.forEach(car=>{
             car.y += currSpeed*0.5;
             car.updateWheels();
-            if(!protectionActive && detectCollision(playerCar, car)){ // Check protectionActive here
+            // التحقق من الاصطدام فقط إذا لم تكن الحماية نشطة
+            if(!protectionActive && detectCollision(playerCar, car)){
               gameOver = true;
               AudioManager.stopAll();
               AudioManager.playCrash();
               vibrateFeedback(100);
-              if(antibioticBatch > 0) {
-                  showResumeOverlay();
-              } else {
-                  setTimeout(showGameOver,100);
-              }
+              showResumeOverlay(); // إظهار خيار الاستئناف أو شاشة النهاية
+              // لا تقم بإظهار شاشة النهاية مباشرة هنا
             }
+            // إعادة تدوير الأعداء
             if(car.y>window.innerHeight){
               car.x = lanes[Math.floor(Math.random()*lanes.length)];
               car.y = -Math.random()*300 - car.height;
             }
           });
-      } else {
+      } else { // حركة الأعداء في وضع السرعة الفائقة (يمرون بسرعة)
            enemyCars.forEach(car=>{
-                car.y += 100 * 0.5; // Super speed movement
+                car.y += 100 * 0.5; // سرعة أعلى
                 car.updateWheels();
+                // إزالة الأعداء الذين يخرجون من الشاشة
                 if(car.y > window.innerHeight){
-                     enemyCars.splice(enemyCars.indexOf(car), 1);
+                     const index = enemyCars.indexOf(car);
+                     if (index > -1) {
+                         enemyCars.splice(index, 1);
+                     }
                 }
            });
       }
 
-
+      // تحديث العملات
       for(let i=coins.length-1;i>=0;i--){
         const c = coins[i];
         c.update(dt);
@@ -2131,63 +2534,37 @@
           coins.splice(i,1);
         }
       }
-      // Spawn Magnet Piece
-      if(distance >= nextMagnetSpawnDistance){ // Always try to spawn if distance is met
+
+      // إنشاء قطع القدرات بناءً على المسافة والشروط
+      if(distance >= nextMagnetSpawnDistance){
         const x = lanes[Math.floor(Math.random()*lanes.length)];
         magnetPieces.push(new MagnetPiece(x, -Math.random()*300-70));
-        nextMagnetSpawnDistance += 1100 + Math.random() * 500; // Add some randomness
+        nextMagnetSpawnDistance += 1100 + Math.random() * 500;
       }
-
-      // Spawn Protection Piece only if player has some in batch
-      if(protectionBatch > 0 && distance>= nextProtectionSpawnDistance){
+      if(protectionBatch > 0 && distance >= nextProtectionSpawnDistance){
         const x = lanes[Math.floor(Math.random()*lanes.length)];
         protectionPieces.push(new ProtectionPiece(x, -Math.random()*300-70));
-        nextProtectionSpawnDistance += 1500 + Math.random() * 600; // Add some randomness
+        nextProtectionSpawnDistance += 1500 + Math.random() * 600;
       }
-
-      // Spawn Points Boost Piece only if player has some in batch
       if(pointsBoostBatch > 0 && distance >= nextPointsBoostSpawnDistance){
         const x = lanes[Math.floor(Math.random()*lanes.length)];
         pointsBoostPieces.push(new PointsBoostPiece(x, -Math.random()*300-70));
-        nextPointsBoostSpawnDistance += 2300 + Math.random() * 700; // Add some randomness
-        // Decrement batch when one is spawned into the game world
-        pointsBoostBatch--;
-        localStorage.setItem("pointsBoostBatch", pointsBoostBatch);
-        updateDashboard();
-        updateLanguage(); // Update store quantities
-        console.log("Points Boost piece spawned, batch remaining: ", pointsBoostBatch);
+        nextPointsBoostSpawnDistance += 2300 + Math.random() * 700;
+        console.log("Points Boost piece spawned, batch available: ", pointsBoostBatch);
       }
 
-      for(let i=magnetPieces.length-1;i>=0;i--){
-        const mp = magnetPieces[i];
-        if(magnetActive){ // If magnet power-up is active, pull pieces
-          const targetX = playerCar.x+playerCar.width/2;
-          const targetY = playerCar.y+playerCar.height/2;
-          mp.x += (targetX-mp.x)*0.1;
-          mp.y += (targetY-mp.y)*0.1;
-        } else { mp.update(dt); } // Else, normal movement
-
-        if(detectCollision(playerCar, {x: mp.x, y: mp.y, width: mp.size, height: mp.size})){
-          if(magnetBatch > 0 && !magnetActive){ // Only activate if not already active and has batch
-            magnetActive = true;
-            magnetEffectTimeLeft = 50; // Duration of magnet effect
-            magnetBatch--; // Decrement from owned batch
-            localStorage.setItem("magnetBatch", magnetBatch);
-            console.log("Magnet Activated from pickup!");
-          }
-          magnetPieces.splice(i,1); // Remove piece from game
-          updateDashboard();
-          updateLanguage(); // Update store quantities
-        } else if(mp.y>window.innerHeight){
-          magnetPieces.splice(i,1); // Remove if off-screen
-        }
-      }
+      // تحديث قطع القدرات
+      updateMagnetPieces(dt);
       updateProtectionPieces(dt);
       updatePointsBoostPieces(dt);
+
+      // تحديث الطلقات والانفجارات
       updateBullets(dt);
       updateExplosions(dt);
+
+      // ----- الرسم -----
       ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-      initBuildings(); // Consider if this needs to be called every frame or less frequently
+      initBuildings(); // إعادة رسم المباني (يمكن تحسينها)
       drawBuildings();
       drawRoad();
       drawFlame(playerCar);
@@ -2199,10 +2576,12 @@
       pointsBoostPieces.forEach(pb=>pb.draw());
       drawExplosions();
       playerCar.draw();
-      updateDashboard();
+      updateDashboard(); // تحديث العدادات وأشرطة التقدم
       updateRain(dt);
       drawRain();
       drawFog();
+
+      // إظهار/إخفاء أزرار التحكم
       if(controlMethod==="rotation"){
         leftBtn.style.display="none";
         rightBtn.style.display="none";
@@ -2210,8 +2589,9 @@
         leftBtn.style.display="block";
         rightBtn.style.display="block";
       }
-      AudioManager.updateEngineSound(globalCurrentSpeed);
+      AudioManager.updateEngineSound(globalCurrentSpeed); // تحديث صوت المحرك
 
+      // استمرار الحلقة إذا لم تنته اللعبة
       if (!gameOver || document.getElementById("resumeOverlay").style.display === "flex") {
            requestAnimationFrame(gameLoop);
       }
@@ -2223,65 +2603,193 @@
       const isMobile = /Mobi|Android/i.test(navigator.userAgent);
       const isPortrait = window.innerHeight >= window.innerWidth;
       over.style.display = (isMobile && isPortrait)?"none":"flex";
+      // إذا كان الجهاز غير مدعوم، إخفاء شاشة التحميل الأولية
+      if (over.style.display === "flex") {
+          document.getElementById("initialLoadingOverlay").style.display = "none";
+      }
     }
-    checkDeviceAndOrientation();
-    window.addEventListener("resize", checkDeviceAndOrientation);
-    window.addEventListener("orientationchange", checkDeviceAndOrientation);
-    /* --------------------- بدء اللعبة --------------------- */
+    /* --------------------- بدء اللعبة والتحميل الأولي --------------------- */
+
+    // دالة لإنهاء التحميل الأولي وبدء عرض شاشة البداية
+    function finishInitialLoading() {
+        document.getElementById("initialLoadingOverlay").style.display = "none";
+        document.getElementById("startOverlay").style.display = "flex";
+        loadSettings(); // تحميل الإعدادات بعد انتهاء التحميل الأولي
+        // عرض نافذة سياسة الخصوصية إذا لم يتم الموافقة عليها مسبقًا
+        if (!localStorage.getItem('privacyAccepted')) {
+            document.getElementById('privacyPolicyPopup').style.display = 'flex';
+        } else {
+            MusicManager.startLoop("start"); // بدء موسيقى شاشة البداية فقط إذا لم تظهر النافذة
+        }
+    }
+
+    // عند تحميل الصفحة بالكامل
+    window.addEventListener('load', () => {
+        checkDeviceAndOrientation(); // التحقق من الجهاز أولاً
+        // إذا كان الجهاز مدعوماً، ابدأ مؤقت شاشة التحميل
+        if (document.getElementById("unsupportedOverlay").style.display === "none") {
+            setTimeout(finishInitialLoading, 7000); // إظهار شاشة البداية بعد 7 ثوان
+        }
+    });
+
+
+    // بدء اللعبة عند الضغط على زر البدء
     document.getElementById("startBtn").addEventListener("click", ()=>{
       if(document.getElementById("unsupportedOverlay").style.display==="flex"){
         alert(currentLanguage==="ar"?"هذه اللعبة مدعومة فقط على الأجهزة المحمولة وبالوضع العمودي.":"This game is supported only on mobile devices in portrait mode.");
         return;
       }
-      if(!mainAudioCtx) mainAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if(AudioManager.audioCtx && AudioManager.audioCtx.state==="suspended"){
-        AudioManager.audioCtx.resume().then(()=>console.log("AudioContext resumed"));
-      }
-      AudioManager.init();
-      MusicManager.stopLoop();
-      document.getElementById("startOverlay").style.display="none";
-      showWaitingScreen();
+      // محاولة تهيئة الصوت عند أول تفاعل حقيقي (إذا لم يتم بالفعل)
+       if (!AudioManager.initialized) AudioManager.init();
+       if(AudioManager.audioCtx && AudioManager.audioCtx.state === "suspended") {
+          AudioManager.audioCtx.resume().then(() => console.log("AudioContext resumed on start click"));
+       }
+      MusicManager.stopLoop(); // إيقاف موسيقى البداية
+      document.getElementById("startOverlay").style.display="none"; // إخفاء شاشة البداية
+      showWaitingScreen(); // إظهار شاشة الانتظار قبل بدء اللعب
     });
-    document.getElementById("startOverlay").addEventListener("transitionstart", ()=>{ // Typo fixed: transitionstart
-      MusicManager.stopLoop();
-      MusicManager.startLoop("start");
+
+
+    /* --------------------- منطق الشاشات الفرعية والنافذة المنبثقة --------------------- */
+
+    // إخفاء جميع الشاشات الفرعية
+    function hideAllOverlays() {
+        document.getElementById("settingsOverlay").style.display="none";
+        document.getElementById("achievementsOverlay").style.display="none";
+        document.getElementById("storeOverlay").style.display="none";
+        document.getElementById("aboutUsOverlay").style.display="none";
+        document.getElementById("contactUsOverlay").style.display="none";
+        document.getElementById("startOverlay").style.display="none"; // إخفاء شاشة البداية أيضاً
+        document.getElementById("gameOverOverlay").style.display = "none";
+        document.getElementById("waitingOverlay").style.display = "none";
+        document.getElementById("resumeOverlay").style.display = "none";
+        document.getElementById("privacyPolicyPopup").style.display = "none";
+    }
+
+    // عرض شاشة محددة
+    function showOverlay(overlayId) {
+        hideAllOverlays(); // إخفاء الكل أولاً
+        document.getElementById(overlayId).style.display = "flex"; // عرض الشاشة المطلوبة
+        if (overlayId === 'startOverlay' && localStorage.getItem('privacyAccepted')) {
+             MusicManager.startLoop("start"); // إعادة تشغيل موسيقى البداية إذا لزم الأمر
+        } else {
+            MusicManager.stopLoop(); // إيقاف الموسيقى للشاشات الأخرى
+        }
+    }
+
+    // أزرار الرجوع العامة
+    document.querySelectorAll(".backBtn").forEach(btn => {
+        btn.addEventListener("click", () => {
+             showOverlay('startOverlay');
+        });
     });
-    // Moved icon generation to loadSettings to ensure it runs after DOM is ready
-    // updateLanguage(); // Called within loadSettings
-    MusicManager.startLoop("start");
-    /* --------------------- منطق شاشة الإعدادات --------------------- */
+
+    // روابط الفوتر في شاشة البداية
+    document.getElementById("privacyPolicyLink").addEventListener("click", (e) => {
+        e.preventDefault(); // منع السلوك الافتراضي للرابط
+        document.getElementById("privacyPolicyPopup").style.display = "flex";
+        MusicManager.stopLoop(); // إيقاف الموسيقى عند عرض النافذة
+    });
+    document.getElementById("aboutUsLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        showOverlay('aboutUsOverlay');
+    });
+    document.getElementById("contactUsLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        showOverlay('contactUsOverlay');
+    });
+
+    // زر الموافقة على سياسة الخصوصية
+    document.getElementById("agreePrivacyBtn").addEventListener("click", () => {
+        document.getElementById("privacyPolicyPopup").style.display = "none";
+        localStorage.setItem('privacyAccepted', 'true'); // حفظ الموافقة
+        if (document.getElementById("startOverlay").style.display === 'flex') {
+             MusicManager.startLoop("start"); // بدء الموسيقى إذا كانت شاشة البداية معروضة
+        }
+    });
+
+
+    // منطق شاشة الإعدادات
     document.getElementById("settingsBtn").addEventListener("click", ()=>{
-      document.getElementById("startOverlay").style.display="none";
-      document.getElementById("settingsOverlay").style.display="flex";
+        showOverlay('settingsOverlay');
     });
-    document.getElementById("backSettingsBtn").addEventListener("click", ()=>{
-      document.getElementById("settingsOverlay").style.display="none";
-      document.getElementById("startOverlay").style.display="flex";
-    });
-    /* --------------------- منطق شاشة الإنجازات --------------------- */
+
+    // منطق شاشة الإنجازات
     document.getElementById("achievementsBtn").addEventListener("click", ()=>{
-      document.getElementById("startOverlay").style.display="none";
-      document.getElementById("achievementsOverlay").style.display="flex";
+      showOverlay('achievementsOverlay');
       const bestScore = localStorage.getItem("bestScore")||0;
       const bestDist = localStorage.getItem("bestDistance")||0;
+      const highestRankAchieved = localStorage.getItem("highestRank") || (currentLanguage === "ar" ? "غير محددة" : "Not set");
       const unit = currentLanguage==="ar"?" كم":" km";
+      document.getElementById("highestRankDisplay").textContent = translations[currentLanguage].highestRankLabel + highestRankAchieved; // تحديث عرض أعلى رتبة
       document.getElementById("achievementsList").innerHTML =
-        `<li style="background: rgba(0,255,255,0.1); margin: 5px 0; padding: 10px; border: 2px solid #0ff; border-radius: 8px;">${translations[currentLanguage].score}${bestScore}</li>
-         <li style="background: rgba(0,255,255,0.1); margin: 5px 0; padding: 10px; border: 2px solid #0ff; border-radius: 8px;">${translations[currentLanguage].distance}${bestDist}${unit}</li>`;
+        `<li>${translations[currentLanguage].score}${bestScore}</li>
+         <li>${translations[currentLanguage].distance}${bestDist}${unit}</li>`;
     });
-    document.getElementById("backAchievementsBtn").addEventListener("click", ()=>{
-      document.getElementById("achievementsOverlay").style.display="none";
-      document.getElementById("startOverlay").style.display="flex";
-    });
-    /* --------------------- منطق شاشة المتجر --------------------- */
+
+    // منطق شاشة المتجر
     document.getElementById("storeBtn").addEventListener("click", ()=>{
-      document.getElementById("startOverlay").style.display="none";
-      document.getElementById("storeOverlay").style.display="flex";
+      showOverlay('storeOverlay');
     });
-    document.getElementById("backStoreBtn").addEventListener("click", ()=>{
-      document.getElementById("storeOverlay").style.display="none";
-      document.getElementById("startOverlay").style.display="flex";
+
+    // منطق شاشة تواصل معنا
+    const contactMessageInput = document.getElementById("contactMessage");
+    const contactEmailInput = document.getElementById("contactEmail");
+    const sendContactBtn = document.getElementById("sendContactBtn");
+    const contactConfirmationPopup = document.getElementById("contactConfirmationPopup");
+
+    contactMessageInput.addEventListener("input", () => {
+        if (contactMessageInput.value.length > 0) {
+            contactEmailInput.style.display = "block";
+        } else {
+            contactEmailInput.style.display = "none";
+            sendContactBtn.style.display = "none"; // إخفاء زر الإرسال أيضاً
+        }
     });
+
+    contactEmailInput.addEventListener("input", () => {
+        if (contactEmailInput.value.length > 0 && contactEmailInput.checkValidity()) { // التحقق من صحة الإيميل أيضاً
+            sendContactBtn.style.display = "block";
+        } else {
+            sendContactBtn.style.display = "none";
+        }
+    });
+
+    sendContactBtn.addEventListener("click", () => {
+        const message = contactMessageInput.value;
+        const email = contactEmailInput.value;
+
+        // التحقق الأساسي قبل الإرسال (المفترض)
+        if (message.trim() === "" || email.trim() === "" || !contactEmailInput.checkValidity()) {
+            alert(currentLanguage === 'ar' ? 'يرجى ملء جميع الحقول بشكل صحيح.' : 'Please fill all fields correctly.');
+            return;
+        }
+
+        // --- محاكاة الإرسال ---
+        // في تطبيق حقيقي، سترسل البيانات هنا إلى الخادم أو خدمة بريد إلكتروني
+        const developerEmail = "msmmjrafyk405@gmail.com";
+        console.log(`--- Sending Message ---
+To: ${developerEmail}
+From: ${email}
+Message: ${message}
+-----------------------`);
+        // --- نهاية محاكاة الإرسال ---
+
+        // تنظيف الحقول وإخفاء العناصر
+        contactMessageInput.value = "";
+        contactEmailInput.value = "";
+        contactEmailInput.style.display = "none";
+        sendContactBtn.style.display = "none";
+
+        // إظهار رسالة التأكيد المؤقتة
+        contactConfirmationPopup.style.display = "block";
+        AudioManager.playSuccessSound(); // تشغيل صوت النجاح
+        setTimeout(() => {
+            contactConfirmationPopup.style.display = "none";
+        }, 3000); // إخفاء الرسالة بعد 3 ثوانٍ
+    });
+
+
     /* --------------------- نهاية الكود --------------------- */
   </script>
 
